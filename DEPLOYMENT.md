@@ -92,7 +92,7 @@ https://library-ai-assistant-worker.your-subdomain.workers.dev
 3. 点击 **Settings** → **Variables**
 4. 添加环境变量：
    - Name: `DEEPSEEK_API_KEY`
-   - Value: `sk-a0c9768f4eaf4501a980e415579c6fa9` (您的 API Key)
+   - Value: `您的 API Key`
    - 选择 **Encrypt** (加密)
 5. 点击 **Save**
 
