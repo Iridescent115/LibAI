@@ -432,31 +432,38 @@
                     
                     <!-- Results Table -->
                     <div class="overflow-x-auto">
-                        <table class="w-full border-collapse">
+                        <table class="w-full border-collapse table-fixed">
+                            <colgroup>
+                                <col class="w-12"> <!-- # column -->
+                                <col class="w-auto"> <!-- Reference column (flexible) -->
+                                <col class="w-40"> <!-- Call Number column (wider) -->
+                                <col class="w-44"> <!-- Location column (wider) -->
+                                <col class="w-36"> <!-- Status column (wider) -->
+                            </colgroup>
                             <thead>
                                 <tr class="bg-gray-100 border-b-2 border-gray-300">
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">#</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">{{ currentLang === 'zh' ? '参考文献' : (currentLang === 'ms' ? 'Rujukan' : 'Reference') }}</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">{{ uiText.callNumber }}</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">{{ uiText.location }}</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">{{ uiText.status }}</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">{{ uiText.callNumber }}</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">{{ uiText.location }}</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider whitespace-nowrap">{{ uiText.status }}</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr v-for="result in librarySearchResults" :key="result.id" class="border-b border-gray-200 hover:bg-gray-50 transition">
                                     <td class="px-4 py-3 text-sm text-gray-600">{{ result.id }}</td>
-                                    <td class="px-4 py-3 text-sm text-gray-800">{{ result.reference }}</td>
-                                    <td class="px-4 py-3">
-                                        <code class="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-blue-600">{{ result.callNumber }}</code>
+                                    <td class="px-4 py-3 text-sm text-gray-800 break-words">{{ result.reference }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <code class="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-blue-600 whitespace-nowrap">{{ result.callNumber }}</code>
                                     </td>
-                                    <td class="px-4 py-3 text-sm text-gray-600">
+                                    <td class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
                                         <i class="fa-solid fa-location-dot mr-1 text-gray-400"></i>
                                         {{ result.location }}
                                     </td>
-                                    <td class="px-4 py-3">
+                                    <td class="px-4 py-3 whitespace-nowrap">
                                         <span 
                                             :class="[
-                                                'px-3 py-1 rounded-full text-xs font-semibold',
+                                                'inline-block px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap',
                                                 result.status === 'Available' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                                             ]"
                                         >
