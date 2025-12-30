@@ -233,9 +233,9 @@
             <div id="chat-container" class="flex-1 overflow-y-auto p-6 bg-gray-50 space-y-6">
                 
                 <!-- Welcome Message -->
-                <div class="flex justify-center my-4">
+                <div v-if="currentConversationId && conversationStartTimes[currentConversationId]" class="flex justify-center my-4">
                     <span class="text-xs text-gray-400 bg-gray-200 px-3 py-1 rounded-full">
-                        {{ uiText.today }} 10:42 PM
+                        {{ formatTimestamp(conversationStartTimes[currentConversationId]) }}
                     </span>
                 </div>
 
@@ -397,6 +397,46 @@
                     }
                 };
 
+                // Format timestamp for display
+                const formatTimestamp = (timestamp) => {
+                    const date = new Date(timestamp);
+                    const now = new Date();
+                    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                    const messageDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                    
+                    // Format time as HH:MM AM/PM
+                    let hours = date.getHours();
+                    const minutes = date.getMinutes().toString().padStart(2, '0');
+                    const ampm = hours >= 12 ? 'PM' : 'AM';
+                    hours = hours % 12 || 12;
+                    const timeStr = `${hours}:${minutes} ${ampm}`;
+                    
+                    // Determine date label based on current language
+                    const lang = currentLang.value;
+                    const todayLabel = lang === 'zh' ? '今天' : (lang === 'ms' ? 'Hari Ini' : 'Today');
+                    const yesterdayLabel = lang === 'zh' ? '昨天' : (lang === 'ms' ? 'Semalam' : 'Yesterday');
+                    
+                    // Check if message is from today
+                    if (messageDate.getTime() === today.getTime()) {
+                        return `${todayLabel} ${timeStr}`;
+                    }
+                    
+                    // Check if message is from yesterday
+                    const yesterday = new Date(today);
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    if (messageDate.getTime() === yesterday.getTime()) {
+                        return `${yesterdayLabel} ${timeStr}`;
+                    }
+                    
+                    // Otherwise show date
+                    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                    const day = date.getDate().toString().padStart(2, '0');
+                    return `${month}/${day} ${timeStr}`;
+                };
+
+                // Store conversation start times
+                const conversationStartTimes = reactive({});
+
                 const translations = {
                     en: {
                         appTitle: 'LibAI Assistant',
@@ -492,10 +532,13 @@
                 // Create new conversation
                 const createNewConversation = () => {
                     const newId = nextConversationId++;
+                    const timestamp = Date.now();
                     conversations[newId] = [];
+                    conversationStartTimes[newId] = timestamp;
                     conversationHistory.value.push({
                         id: newId,
-                        title: 'New Conversation'
+                        title: 'New Conversation',
+                        startTime: timestamp
                     });
                     loadConversation(newId);
                 };
@@ -730,7 +773,9 @@ Your role is to provide scholarly, well-referenced assistance that reflects prof
                     showSettings,
                     currentLang,
                     changeLanguage,
-                    uiText
+                    uiText,
+                    formatTimestamp,
+                    conversationStartTimes
                 };
             }
         }).mount('#app');
