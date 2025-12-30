@@ -241,17 +241,20 @@
 
                 <!-- Message Loop Rendering -->
                 <div v-for="(msg, index) in messages" :key="index" 
-                     :class="['flex w-full', msg.role === 'user' ? 'justify-end' : 'justify-start']">
+                     :class="['flex w-full mb-6', msg.role === 'user' ? 'justify-end' : 'justify-start']">
                     
                     <!-- AI Avatar -->
-                    <div v-if="msg.role === 'assistant'" class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white shrink-0 mr-4 shadow-md">
+                    <div v-if="msg.role === 'assistant'" class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white shrink-0 mr-4 shadow-md mt-1">
                         <i class="fa-solid fa-robot"></i>
                     </div>
 
-                    <!-- Message Bubble -->
-                    <div :class="['rounded-2xl p-5 shadow-sm', 
-                                 msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none max-w-[80%]' : 'bg-white border border-gray-100 rounded-bl-none max-w-[95%]']">
-                        
+                    <!-- User Message Bubble -->
+                    <div v-if="msg.role === 'user'" class="bg-blue-600 text-white rounded-2xl rounded-br-none p-5 shadow-sm max-w-[80%]">
+                        <div class="text-sm leading-relaxed text-white" v-html="msg.content"></div>
+                    </div>
+
+                    <!-- AI Message Content (No Bubble) -->
+                    <div v-else class="flex-1">
                         <!-- Thinking Process (Only shown for AI when thinking) -->
                         <div v-if="msg.isThinking" class="mb-5 bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-500 p-5 rounded-lg shadow-sm">
                             <div class="flex items-center font-bold mb-4 text-amber-900">
@@ -267,15 +270,10 @@
                         </div>
 
                         <!-- Main Content -->
-                        <div class="text-sm leading-relaxed" 
-                             :class="[
-                                 msg.role === 'user' ? 'text-white' : 'text-slate-700',
-                                 msg.role === 'assistant' ? 'markdown-content' : ''
-                             ]" 
-                             v-html="msg.content"></div>
+                        <div class="text-sm leading-relaxed text-slate-700 markdown-content" v-html="msg.content"></div>
 
                         <!-- References (Only shown for AI) -->
-                        <div v-if="msg.sources && msg.sources.length > 0" class="mt-4 pt-4 border-t border-gray-100">
+                        <div v-if="msg.sources && msg.sources.length > 0" class="mt-4 pt-4 border-t border-gray-200">
                             <div class="flex items-center justify-between mb-2">
                                 <p class="text-xs font-bold text-gray-500">
                                     {{ currentLang === 'zh' ? '参考文献' : (currentLang === 'ms' ? 'Rujukan' : 'References') }}:
@@ -322,7 +320,7 @@
                     </div>
 
                     <!-- User Avatar -->
-                    <div v-if="msg.role === 'user'" class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white shrink-0 ml-4 shadow-md">
+                    <div v-if="msg.role === 'user'" class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white shrink-0 ml-4 shadow-md mt-1">
                         <i class="fa-solid fa-user"></i>
                     </div>
                 </div>
