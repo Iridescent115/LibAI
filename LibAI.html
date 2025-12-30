@@ -846,7 +846,12 @@
                     
                     if (useLocalDatabase.value) {
                         // With local database - require references
-                        systemPrompt = `You are an intelligent library assistant with expertise in academic research and information retrieval. 
+                        systemPrompt = `You are an intelligent library management assistant with expertise in academic research and information retrieval. 
+
+LIBRARY INFORMATION:
+- Library Name: University Library
+- Operating Hours: 8:00 AM - 10:00 PM (Daily)
+- You are here to assist users with library services, research inquiries, and academic support
 
 CRITICAL REQUIREMENT - YOU MUST ALWAYS INCLUDE REFERENCES:
 For EVERY response, regardless of the question type, you MUST end your answer with a "References:" section containing 3-5 specific academic citations.
@@ -877,7 +882,12 @@ IMPORTANT REMINDERS:
 Your role is to provide scholarly, well-referenced assistance that reflects professional library and academic standards.`;
                     } else {
                         // Without local database - no reference requirement
-                        systemPrompt = `You are an intelligent library assistant with expertise in academic research and information retrieval.
+                        systemPrompt = `You are an intelligent library management assistant with expertise in academic research and information retrieval.
+
+LIBRARY INFORMATION:
+- Library Name: University Library
+- Operating Hours: 8:00 AM - 10:00 PM (Daily)
+- You are here to assist users with library services, research inquiries, and academic support
 
 Provide helpful, accurate, and well-structured responses to user questions. Focus on delivering clear and informative answers about library services, academic research, and information literacy.
 
