@@ -250,7 +250,7 @@
                 // API 端点配置 - 自动检测环境
                 const API_ENDPOINT = window.location.hostname === 'localhost' 
                     ? 'http://localhost:3000/api/chat'  // 本地开发
-                    : 'https://library-ai-assistant-worker.lhb1158169148.workers.dev/api/chat'; // 生产环境 - 需要替换
+                    : 'https://libai-worker.lhb1158169148.workers.dev/api/chat'; // 生产环境 - 部署后替换为实际的 Worker URL
 
                 const translations = {
                     en: {

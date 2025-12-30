@@ -1,7 +1,7 @@
 {
-  "name": "library-ai-assistant",
+  "name": "libai",
   "version": "1.0.0",
-  "description": "Library AI Assistant with DeepSeek Integration - Cloudflare Deployment",
+  "description": "LibAI - Library AI Assistant with DeepSeek Integration - Cloudflare Deployment",
   "scripts": {
     "deploy": "wrangler deploy",
     "dev": "wrangler dev"

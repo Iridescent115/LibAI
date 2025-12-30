@@ -1,4 +1,4 @@
-name = "library-ai-assistant-worker"
+name = "libai-worker"
 main = "worker.js"
 compatibility_date = "2024-01-01"
 
