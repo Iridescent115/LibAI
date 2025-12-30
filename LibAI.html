@@ -573,26 +573,39 @@
                 // Store conversation start times
                 const conversationStartTimes = reactive({});
 
-                // Generate random library call number
-                const generateCallNumber = () => {
+                // Generate random library call number and location
+                const generateLibraryData = () => {
                     // Book type letters: K(History), I(Literature), T(Technology), etc.
                     const types = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'N', 'P', 'Q', 'R', 'T', 'U', 'Z'];
                     const type = types[Math.floor(Math.random() * types.length)];
                     const shelf = Math.floor(Math.random() * 9000) + 1000; // 1000-9999
                     const level = Math.floor(Math.random() * 7) + 1; // 1-7
                     const position = Math.floor(Math.random() * 900) + 100; // 100-999
-                    return `${type}${shelf}-${level}-${position}`;
+                    const callNumber = `${type}${shelf}-${level}-${position}`;
+                    
+                    // Generate location with matching section letter
+                    const floor = Math.floor(Math.random() * 5) + 1;
+                    const location = `Floor ${floor}, Section ${type}`;
+                    
+                    return {
+                        callNumber,
+                        location,
+                        type
+                    };
                 };
 
                 // Search local library database (simulated)
                 const searchLibraryDatabase = (references) => {
-                    librarySearchResults.value = references.map((ref, index) => ({
-                        id: index + 1,
-                        reference: ref,
-                        callNumber: generateCallNumber(),
-                        status: Math.random() > 0.3 ? 'Available' : 'Borrowed',
-                        location: `Floor ${Math.floor(Math.random() * 5) + 1}, Section ${String.fromCharCode(65 + Math.floor(Math.random() * 10))}`
-                    }));
+                    librarySearchResults.value = references.map((ref, index) => {
+                        const libraryData = generateLibraryData();
+                        return {
+                            id: index + 1,
+                            reference: ref,
+                            callNumber: libraryData.callNumber,
+                            status: Math.random() > 0.3 ? 'Available' : 'Borrowed',
+                            location: libraryData.location
+                        };
+                    });
                     showLibraryModal.value = true;
                 };
 
