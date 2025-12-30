@@ -915,8 +915,39 @@ Provide comprehensive and friendly assistance to help users succeed in their aca
                     ];
 
                     try {
-                        // 3. Call DeepSeek API
-                        thinkingSteps.value = ['Connecting to DeepSeek AI...'];
+                        // 3. Call DeepSeek API with simulated thinking steps
+                        thinkingSteps.value = ['1. Parsing intent and analyzing query...'];
+                        
+                        // Simulate progressive thinking steps
+                        setTimeout(() => {
+                            if (thinkingSteps.value.length > 0) {
+                                thinkingSteps.value = [
+                                    '1. Parsing intent and analyzing query...',
+                                    '2. Retrieving related literature and knowledge...'
+                                ];
+                            }
+                        }, 300);
+                        
+                        setTimeout(() => {
+                            if (thinkingSteps.value.length > 0) {
+                                thinkingSteps.value = [
+                                    '1. Parsing intent and analyzing query...',
+                                    '2. Retrieving related literature and knowledge...',
+                                    '3. Building Chain of Thought reasoning...'
+                                ];
+                            }
+                        }, 600);
+                        
+                        setTimeout(() => {
+                            if (thinkingSteps.value.length > 0) {
+                                thinkingSteps.value = [
+                                    '1. Parsing intent and analyzing query...',
+                                    '2. Retrieving related literature and knowledge...',
+                                    '3. Building Chain of Thought reasoning...',
+                                    '4. Generating final response with references...'
+                                ];
+                            }
+                        }, 900);
                         
                         const response = await callDeepSeekAPI(apiMessages);
                         
