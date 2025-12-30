@@ -256,15 +256,15 @@
                     <!-- AI Message Content (No Bubble) -->
                     <div v-else class="flex-1">
                         <!-- Thinking Process (Only shown for AI when thinking) -->
-                        <div v-if="msg.isThinking" class="mb-5 bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-500 p-5 rounded-lg shadow-sm">
-                            <div class="flex items-center font-bold mb-4 text-amber-900">
-                                <i class="fa-solid fa-brain mr-3 pulse-animation text-lg"></i> 
-                                <span class="text-lg">DeepSeek Thinking...</span>
+                        <div v-if="msg.isThinking" class="mb-5 bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-500 p-4 rounded-lg shadow-sm">
+                            <div class="flex items-center font-bold mb-3 text-amber-900">
+                                <i class="fa-solid fa-brain mr-2 pulse-animation text-sm"></i> 
+                                <span class="text-sm">DeepSeek Thinking...</span>
                             </div>
-                            <div class="space-y-3 text-amber-900">
+                            <div class="space-y-2 text-amber-900">
                                 <div v-for="step in thinkingSteps" :key="step" class="flex items-start leading-relaxed">
-                                    <i class="fa-solid fa-check text-amber-600 mr-3 mt-1.5 flex-shrink-0 text-sm"></i> 
-                                    <span class="break-words text-base font-medium">{{ step }}</span>
+                                    <i class="fa-solid fa-check text-amber-600 mr-2 mt-0.5 flex-shrink-0 text-xs"></i> 
+                                    <span class="break-words text-sm">{{ step }}</span>
                                 </div>
                             </div>
                         </div>
