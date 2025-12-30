@@ -279,8 +279,8 @@
                                 <p class="text-xs font-bold text-gray-500">
                                     {{ currentLang === 'zh' ? '参考文献' : (currentLang === 'ms' ? 'Rujukan' : 'References') }}:
                                 </p>
+                                <!-- Always show button when there are references -->
                                 <button 
-                                    v-if="msg.useDatabase !== false"
                                     @click="searchLibraryDatabase(msg.sources)"
                                     class="px-3 py-1 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700 transition-colors flex items-center space-x-1 shadow-sm"
                                 >
