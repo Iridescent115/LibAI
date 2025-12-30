@@ -23,7 +23,7 @@ Write-Host "🔧 部署 Cloudflare Worker (后端 API)..." -ForegroundColor Yell
 Write-Host ""
 
 # 检查是否登录
-Write-Host "� 检查登录状态..." -ForegroundColor Yellow
+Write-Host "🔐 检查登录状态..." -ForegroundColor Yellow
 $loginStatus = wrangler whoami 2>&1
 if ($LASTEXITCODE -ne 0) {
     Write-Host "需要登录 Cloudflare..." -ForegroundColor Yellow
@@ -51,7 +51,7 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host ""
     Write-Host "1️⃣  设置环境变量" -ForegroundColor Yellow
     Write-Host "   访问: https://dash.cloudflare.com/" -ForegroundColor White
-    Write-Host "   进入: Workers & Pages → 您的 Worker → Settings → Variables" -ForegroundColor White
+    Write-Host "   进入: Workers & Pages -> 您的 Worker -> Settings -> Variables" -ForegroundColor White
     Write-Host "   添加: DEEPSEEK_API_KEY = (您的 API Key)" -ForegroundColor White
     Write-Host ""
     Write-Host "2️⃣  复制 Worker URL" -ForegroundColor Yellow
@@ -72,7 +72,7 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host ""
     Write-Host "5️⃣  部署到 Cloudflare Pages" -ForegroundColor Yellow
     Write-Host "   访问: https://dash.cloudflare.com/" -ForegroundColor White
-    Write-Host "   选择: Workers & Pages → Create → Pages → Connect to Git" -ForegroundColor White
+    Write-Host "   选择: Workers & Pages -> Create -> Pages -> Connect to Git" -ForegroundColor White
     Write-Host "   选择您的 GitHub 仓库并部署" -ForegroundColor White
     Write-Host ""
     Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Cyan
