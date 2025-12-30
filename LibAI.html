@@ -444,7 +444,26 @@
                     const apiMessages = [
                         {
                             role: 'system',
-                            content: 'You are a helpful library intelligent assistant. You can help users find resources, answer academic questions, and assist with paper writing. Provide structured, informative responses.'
+                            content: `You are an intelligent library assistant with expertise in academic research and information retrieval. 
+
+IMPORTANT REQUIREMENTS:
+1. For EVERY response, you MUST provide 3-5 relevant academic references at the end
+2. References should be formatted as: [Author(s). (Year). Title. Journal/Publisher.]
+3. Use real or realistic academic sources related to the topic
+4. Include a "References:" or "参考文献:" section at the end of your response
+5. References should be relevant to the question, even for simple queries
+6. For library-specific questions (hours, services), cite library science journals or institutional resources
+7. For academic questions, cite relevant academic journals, books, or conference papers
+
+RESPONSE FORMAT:
+[Your detailed answer here]
+
+References:
+[1] Author, A. (Year). Title of work. Journal Name, Volume(Issue), pages.
+[2] Author, B. (Year). Title of book. Publisher.
+[3] ...
+
+Provide helpful, accurate, and well-researched responses with proper academic citations.`
                         },
                         ...messages.value
                             .filter(msg => msg.role === 'user' || msg.role === 'assistant')
@@ -466,7 +485,26 @@
                         thinkingSteps.value = [];
                         
                         const aiResponse = response.choices[0].message.content;
-                        messages.value[aiMsgIndex].content = aiResponse.replace(/\n/g, '<br>');
+                        
+                        // Extract references from response
+                        const referencesMatch = aiResponse.match(/(?:References?|参考文献)[：:]\s*([\s\S]+?)(?:\n\n|$)/i);
+                        let mainContent = aiResponse;
+                        let extractedSources = [];
+                        
+                        if (referencesMatch) {
+                            // Split content and references
+                            mainContent = aiResponse.substring(0, referencesMatch.index).trim();
+                            const referencesText = referencesMatch[1].trim();
+                            
+                            // Extract individual references (numbered list format)
+                            const referenceLines = referencesText.split(/\n/).filter(line => line.trim());
+                            extractedSources = referenceLines
+                                .map(line => line.replace(/^\[\d+\]\s*/, '').trim())
+                                .filter(line => line.length > 0);
+                        }
+                        
+                        messages.value[aiMsgIndex].content = mainContent.replace(/\n/g, '<br>');
+                        messages.value[aiMsgIndex].sources = extractedSources.length > 0 ? extractedSources : [];
                         
                         // Update conversation in storage
                         conversations[currentConversationId.value] = [...messages.value];
