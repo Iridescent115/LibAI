@@ -275,7 +275,17 @@
 
                         <!-- References (Only shown for AI) -->
                         <div v-if="msg.sources && msg.sources.length > 0" class="mt-4 pt-4 border-t border-gray-100">
-                            <p class="text-xs font-bold text-gray-500 mb-2">References (Sources):</p>
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-xs font-bold text-gray-500">References (Sources):</p>
+                                <button 
+                                    v-if="useLocalDatabase"
+                                    @click="searchLibraryDatabase(msg.sources)"
+                                    class="px-3 py-1 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700 transition-colors flex items-center space-x-1"
+                                >
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                    <span>{{ uiText.searchLibrary }}</span>
+                                </button>
+                            </div>
                             <ul class="text-xs text-gray-500 space-y-1">
                                 <li v-for="(source, idx) in msg.sources" :key="idx" class="hover:text-blue-600 cursor-pointer transition">
                                     [{{ idx + 1 }}] {{ source }}
@@ -329,6 +339,49 @@
                             {{ uiText.quickAction2 }}
                         </span>
                     </div>
+                    
+                    <!-- Local Database Toggle -->
+                    <div class="mb-3 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <label class="flex items-center cursor-pointer">
+                                <div class="relative">
+                                    <input 
+                                        type="checkbox" 
+                                        v-model="useLocalDatabase"
+                                        :disabled="conversationStarted[currentConversationId]"
+                                        class="sr-only"
+                                    >
+                                    <div 
+                                        :class="[
+                                            'block w-14 h-8 rounded-full transition-colors',
+                                            useLocalDatabase ? 'bg-blue-600' : 'bg-gray-300',
+                                            conversationStarted[currentConversationId] ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                                        ]"
+                                    ></div>
+                                    <div 
+                                        :class="[
+                                            'dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform',
+                                            useLocalDatabase ? 'transform translate-x-6' : ''
+                                        ]"
+                                    ></div>
+                                </div>
+                                <span 
+                                    :class="[
+                                        'ml-3 text-sm font-medium',
+                                        conversationStarted[currentConversationId] ? 'text-gray-400' : 'text-gray-700'
+                                    ]"
+                                >
+                                    <i class="fa-solid fa-database mr-1"></i>
+                                    {{ uiText.useLocalDb }}
+                                </span>
+                            </label>
+                        </div>
+                        <div v-if="conversationStarted[currentConversationId]" class="text-xs text-gray-400">
+                            <i class="fa-solid fa-lock mr-1"></i>
+                            {{ currentLang === 'zh' ? '已锁定' : (currentLang === 'ms' ? 'Terkunci' : 'Locked') }}
+                        </div>
+                    </div>
+                    
                     <div class="flex items-end border border-gray-300 rounded-xl bg-white shadow-sm focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all overflow-hidden">
                         <textarea 
                             v-model="inputMessage"
@@ -351,6 +404,82 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Library Database Search Modal -->
+        <div v-if="showLibraryModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click="closeLibraryModal">
+            <div class="bg-white rounded-lg shadow-2xl max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden" @click.stop>
+                <!-- Modal Header -->
+                <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <i class="fa-solid fa-database text-2xl"></i>
+                        <h3 class="text-lg font-bold">{{ uiText.libraryModalTitle }}</h3>
+                    </div>
+                    <button @click="closeLibraryModal" class="hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition">
+                        <i class="fa-solid fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <!-- Modal Body -->
+                <div class="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
+                    <div class="mb-4 bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
+                        <p class="text-sm text-blue-800">
+                            <i class="fa-solid fa-circle-info mr-2"></i>
+                            {{ currentLang === 'zh' ? '正在本地图书馆数据库中搜索参考文献...' : (currentLang === 'ms' ? 'Mencari rujukan dalam pangkalan data perpustakaan tempatan...' : 'Searching for references in local library database...') }}
+                        </p>
+                    </div>
+                    
+                    <!-- Results Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100 border-b-2 border-gray-300">
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">#</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">{{ currentLang === 'zh' ? '参考文献' : (currentLang === 'ms' ? 'Rujukan' : 'Reference') }}</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">{{ uiText.callNumber }}</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">{{ uiText.location }}</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">{{ uiText.status }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="result in librarySearchResults" :key="result.id" class="border-b border-gray-200 hover:bg-gray-50 transition">
+                                    <td class="px-4 py-3 text-sm text-gray-600">{{ result.id }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-800">{{ result.reference }}</td>
+                                    <td class="px-4 py-3">
+                                        <code class="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-blue-600">{{ result.callNumber }}</code>
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">
+                                        <i class="fa-solid fa-location-dot mr-1 text-gray-400"></i>
+                                        {{ result.location }}
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <span 
+                                            :class="[
+                                                'px-3 py-1 rounded-full text-xs font-semibold',
+                                                result.status === 'Available' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                            ]"
+                                        >
+                                            <i :class="['fa-solid mr-1', result.status === 'Available' ? 'fa-circle-check' : 'fa-circle-xmark']"></i>
+                                            {{ result.status === 'Available' ? uiText.available : uiText.borrowed }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Modal Footer -->
+                <div class="bg-gray-50 px-6 py-4 flex justify-end border-t border-gray-200">
+                    <button 
+                        @click="closeLibraryModal"
+                        class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                    >
+                        <i class="fa-solid fa-check mr-2"></i>
+                        {{ uiText.close }}
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -367,6 +496,13 @@
                 const conversationHistory = ref([]);
                 const conversations = reactive({});
                 let nextConversationId = 1;
+                
+                // Local database search toggle states
+                const useLocalDatabase = ref(true); // Default enabled
+                const conversationStarted = reactive({}); // Track if conversation has started
+                const showLibraryModal = ref(false);
+                const currentReferences = ref([]);
+                const librarySearchResults = ref([]);
                 
                 // API 端点配置 - 自动检测环境
                 const API_ENDPOINT = window.location.hostname === 'localhost' 
@@ -437,6 +573,33 @@
                 // Store conversation start times
                 const conversationStartTimes = reactive({});
 
+                // Generate random library call number
+                const generateCallNumber = () => {
+                    // Book type letters: K(History), I(Literature), T(Technology), etc.
+                    const types = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'N', 'P', 'Q', 'R', 'T', 'U', 'Z'];
+                    const type = types[Math.floor(Math.random() * types.length)];
+                    const shelf = Math.floor(Math.random() * 9000) + 1000; // 1000-9999
+                    const level = Math.floor(Math.random() * 7) + 1; // 1-7
+                    const position = Math.floor(Math.random() * 900) + 100; // 100-999
+                    return `${type}${shelf}-${level}-${position}`;
+                };
+
+                // Search local library database (simulated)
+                const searchLibraryDatabase = (references) => {
+                    librarySearchResults.value = references.map((ref, index) => ({
+                        id: index + 1,
+                        reference: ref,
+                        callNumber: generateCallNumber(),
+                        status: Math.random() > 0.3 ? 'Available' : 'Borrowed',
+                        location: `Floor ${Math.floor(Math.random() * 5) + 1}, Section ${String.fromCharCode(65 + Math.floor(Math.random() * 10))}`
+                    }));
+                    showLibraryModal.value = true;
+                };
+
+                const closeLibraryModal = () => {
+                    showLibraryModal.value = false;
+                };
+
                 const translations = {
                     en: {
                         appTitle: 'LibAI Assistant',
@@ -452,6 +615,15 @@
                         quickAction2: '🔍 Find Recent Core Journals',
                         footer: 'DeepSeek R1 Model + Library Knowledge Base',
                         settingsTitle: 'Language',
+                        useLocalDb: 'Local Database',
+                        searchLibrary: 'Search Library Database',
+                        libraryModalTitle: 'Library Database Search Results',
+                        callNumber: 'Call Number',
+                        status: 'Status',
+                        location: 'Location',
+                        available: 'Available',
+                        borrowed: 'Borrowed',
+                        close: 'Close',
                         historyItems: {
                             1: 'Opening Hours Inquiry',
                             2: 'Digital Humanities Scenarios',
@@ -472,6 +644,15 @@
                         quickAction2: '🔍 查找近期核心期刊',
                         footer: 'DeepSeek R1 模型 + 图书馆知识库',
                         settingsTitle: '语言设置',
+                        useLocalDb: '本地数据库',
+                        searchLibrary: '在本地图书数据库内查找',
+                        libraryModalTitle: '图书馆数据库检索结果',
+                        callNumber: '索书号',
+                        status: '状态',
+                        location: '位置',
+                        available: '可借',
+                        borrowed: '已借出',
+                        close: '关闭',
                         historyItems: {
                             1: '开馆时间查询',
                             2: '数字人文应用场景',
@@ -492,6 +673,15 @@
                         quickAction2: '🔍 Cari Jurnal Teras Terkini',
                         footer: 'Model DeepSeek R1 + Pangkalan Pengetahuan Perpustakaan',
                         settingsTitle: 'Bahasa',
+                        useLocalDb: 'Pangkalan Data Tempatan',
+                        searchLibrary: 'Cari Pangkalan Data Perpustakaan',
+                        libraryModalTitle: 'Keputusan Carian Pangkalan Data Perpustakaan',
+                        callNumber: 'Nombor Panggilan',
+                        status: 'Status',
+                        location: 'Lokasi',
+                        available: 'Tersedia',
+                        borrowed: 'Dipinjam',
+                        close: 'Tutup',
                         historyItems: {
                             1: 'Pertanyaan Waktu Operasi',
                             2: 'Senario Kemanusiaan Digital',
@@ -535,6 +725,7 @@
                     const timestamp = Date.now();
                     conversations[newId] = [];
                     conversationStartTimes[newId] = timestamp;
+                    conversationStarted[newId] = false; // Track if conversation has started
                     conversationHistory.value.push({
                         id: newId,
                         title: 'New Conversation',
@@ -547,6 +738,7 @@
                 const clearCurrentContext = () => {
                     if (currentConversationId.value && conversations[currentConversationId.value]) {
                         conversations[currentConversationId.value] = [];
+                        conversationStarted[currentConversationId.value] = false; // Reset conversation state
                         messages.value = [];
                     }
                 };
@@ -616,6 +808,11 @@
                         conversationHistory.value[conversationIndex].title = generateTitle(userMessage);
                     }
                     
+                    // Mark conversation as started (lock the database toggle)
+                    if (!conversationStarted[currentConversationId.value]) {
+                        conversationStarted[currentConversationId.value] = true;
+                    }
+                    
                     inputMessage.value = '';
                     isProcessing.value = true;
                     
@@ -635,10 +832,12 @@
                     });
 
                     // Prepare messages for API (convert display format to API format)
-                    const apiMessages = [
-                        {
-                            role: 'system',
-                            content: `You are an intelligent library assistant with expertise in academic research and information retrieval. 
+                    // System prompt depends on whether local database search is enabled
+                    let systemPrompt = '';
+                    
+                    if (useLocalDatabase.value) {
+                        // With local database - require references
+                        systemPrompt = `You are an intelligent library assistant with expertise in academic research and information retrieval. 
 
 CRITICAL REQUIREMENT - YOU MUST ALWAYS INCLUDE REFERENCES:
 For EVERY response, regardless of the question type, you MUST end your answer with a "References:" section containing 3-5 specific academic citations.
@@ -659,24 +858,6 @@ References:
 [3] Author, D. et al. (Year). Conference paper title. Conference Name, pages.
 [4-5] Additional relevant sources...
 
-EXAMPLE FOR LIBRARY HOURS QUESTION:
-[Your answer about hours]
-
-References:
-[1] Smith, J. (2023). Optimizing Academic Library Service Hours: A User-Centered Approach. Journal of Academic Librarianship, 49(3), 102-115.
-[2] Chen, L. & Wang, M. (2022). Library Operating Hours and Student Success. College & Research Libraries, 83(2), 234-251.
-[3] University Library Association. (2024). Best Practices for Library Services. ULA Publications.
-
-EXAMPLE FOR RESEARCH QUESTION:
-[Your detailed research answer]
-
-References:
-[1] [Relevant academic source 1]
-[2] [Relevant academic source 2]
-[3] [Relevant academic source 3]
-[4] [Relevant academic source 4]
-[5] [Relevant academic source 5]
-
 IMPORTANT REMINDERS:
 ✓ NEVER skip the References section
 ✓ ALWAYS provide at least 3 references, preferably 4-5
@@ -684,7 +865,27 @@ IMPORTANT REMINDERS:
 ✓ Use proper academic citation format
 ✓ For Chinese language responses, use "参考文献:" instead of "References:"
 
-Your role is to provide scholarly, well-referenced assistance that reflects professional library and academic standards.`
+Your role is to provide scholarly, well-referenced assistance that reflects professional library and academic standards.`;
+                    } else {
+                        // Without local database - no reference requirement
+                        systemPrompt = `You are an intelligent library assistant with expertise in academic research and information retrieval.
+
+Provide helpful, accurate, and well-structured responses to user questions. Focus on delivering clear and informative answers about library services, academic research, and information literacy.
+
+Your role is to assist users with:
+- Library services and resources
+- Research strategies and methodologies
+- Academic writing and citation
+- Information literacy
+- General academic inquiries
+
+Provide comprehensive and friendly assistance to help users succeed in their academic endeavors.`;
+                    }
+                    
+                    const apiMessages = [
+                        {
+                            role: 'system',
+                            content: systemPrompt
                         },
                         ...messages.value
                             .filter(msg => msg.role === 'user' || msg.role === 'assistant')
@@ -775,7 +976,13 @@ Your role is to provide scholarly, well-referenced assistance that reflects prof
                     changeLanguage,
                     uiText,
                     formatTimestamp,
-                    conversationStartTimes
+                    conversationStartTimes,
+                    useLocalDatabase,
+                    conversationStarted,
+                    showLibraryModal,
+                    librarySearchResults,
+                    searchLibraryDatabase,
+                    closeLibraryModal
                 };
             }
         }).mount('#app');
