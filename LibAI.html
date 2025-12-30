@@ -446,24 +446,51 @@
                             role: 'system',
                             content: `You are an intelligent library assistant with expertise in academic research and information retrieval. 
 
-IMPORTANT REQUIREMENTS:
-1. For EVERY response, you MUST provide 3-5 relevant academic references at the end
-2. References should be formatted as: [Author(s). (Year). Title. Journal/Publisher.]
-3. Use real or realistic academic sources related to the topic
-4. Include a "References:" or "参考文献:" section at the end of your response
-5. References should be relevant to the question, even for simple queries
-6. For library-specific questions (hours, services), cite library science journals or institutional resources
-7. For academic questions, cite relevant academic journals, books, or conference papers
+CRITICAL REQUIREMENT - YOU MUST ALWAYS INCLUDE REFERENCES:
+For EVERY response, regardless of the question type, you MUST end your answer with a "References:" section containing 3-5 specific academic citations.
 
-RESPONSE FORMAT:
-[Your detailed answer here]
+REFERENCE FORMAT:
+- Use standard academic citation format
+- Include author(s), year, title, and source
+- Make references relevant to the topic discussed
+- Even for simple questions (e.g., library hours), cite relevant library science or institutional sources
+
+RESPONSE STRUCTURE (MANDATORY):
+1. First, provide your main answer/content
+2. Then, ALWAYS add a blank line followed by:
 
 References:
-[1] Author, A. (Year). Title of work. Journal Name, Volume(Issue), pages.
-[2] Author, B. (Year). Title of book. Publisher.
-[3] ...
+[1] Author, A. & Author, B. (Year). Article title. Journal Name, Volume(Issue), pages. DOI/URL
+[2] Author, C. (Year). Book title. Publisher Name.
+[3] Author, D. et al. (Year). Conference paper title. Conference Name, pages.
+[4-5] Additional relevant sources...
 
-Provide helpful, accurate, and well-researched responses with proper academic citations.`
+EXAMPLE FOR LIBRARY HOURS QUESTION:
+[Your answer about hours]
+
+References:
+[1] Smith, J. (2023). Optimizing Academic Library Service Hours: A User-Centered Approach. Journal of Academic Librarianship, 49(3), 102-115.
+[2] Chen, L. & Wang, M. (2022). Library Operating Hours and Student Success. College & Research Libraries, 83(2), 234-251.
+[3] University Library Association. (2024). Best Practices for Library Services. ULA Publications.
+
+EXAMPLE FOR RESEARCH QUESTION:
+[Your detailed research answer]
+
+References:
+[1] [Relevant academic source 1]
+[2] [Relevant academic source 2]
+[3] [Relevant academic source 3]
+[4] [Relevant academic source 4]
+[5] [Relevant academic source 5]
+
+IMPORTANT REMINDERS:
+✓ NEVER skip the References section
+✓ ALWAYS provide at least 3 references, preferably 4-5
+✓ Make sure references are relevant and realistic
+✓ Use proper academic citation format
+✓ For Chinese language responses, use "参考文献:" instead of "References:"
+
+Your role is to provide scholarly, well-referenced assistance that reflects professional library and academic standards.`
                         },
                         ...messages.value
                             .filter(msg => msg.role === 'user' || msg.role === 'assistant')
@@ -486,8 +513,11 @@ Provide helpful, accurate, and well-researched responses with proper academic ci
                         
                         const aiResponse = response.choices[0].message.content;
                         
-                        // Extract references from response
-                        const referencesMatch = aiResponse.match(/(?:References?|参考文献)[：:]\s*([\s\S]+?)(?:\n\n|$)/i);
+                        // Extract references from response (support multiple formats)
+                        // Match: "References:", "参考文献:", "**参考文献**", "#### 参考文献" etc.
+                        const referencesPattern = /(?:#+\s*\*{0,2}(?:References?|参考文献)\*{0,2}|(?:References?|参考文献))[：:：\s]*\n([\s\S]+?)(?:\n\n(?:#+|$)|$)/i;
+                        const referencesMatch = aiResponse.match(referencesPattern);
+                        
                         let mainContent = aiResponse;
                         let extractedSources = [];
                         
@@ -496,11 +526,25 @@ Provide helpful, accurate, and well-researched responses with proper academic ci
                             mainContent = aiResponse.substring(0, referencesMatch.index).trim();
                             const referencesText = referencesMatch[1].trim();
                             
-                            // Extract individual references (numbered list format)
-                            const referenceLines = referencesText.split(/\n/).filter(line => line.trim());
+                            // Extract individual references (support multiple numbering formats)
+                            // Supports: [1], 1., (1), 【1】, etc.
+                            const referenceLines = referencesText.split(/\n/).filter(line => {
+                                const trimmed = line.trim();
+                                // Filter out empty lines and markdown headers
+                                return trimmed && !trimmed.startsWith('#') && trimmed !== '---';
+                            });
+                            
                             extractedSources = referenceLines
-                                .map(line => line.replace(/^\[\d+\]\s*/, '').trim())
-                                .filter(line => line.length > 0);
+                                .map(line => line.replace(/^[\[【\(]?\d+[\]】\)]?\.?\s*/, '').trim())
+                                .filter(line => line.length > 10); // Filter out very short lines (likely not real references)
+                            
+                            // If we found references, make sure we have at least 3
+                            if (extractedSources.length > 0 && extractedSources.length < 3) {
+                                console.warn('Warning: AI provided fewer than 3 references');
+                            }
+                        } else {
+                            // If no references found, log a warning
+                            console.warn('Warning: No references section found in AI response');
                         }
                         
                         messages.value[aiMsgIndex].content = mainContent.replace(/\n/g, '<br>');
