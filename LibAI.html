@@ -249,18 +249,19 @@
                     </div>
 
                     <!-- Message Bubble -->
-                    <div :class="['max-w-[80%] rounded-2xl p-5 shadow-sm', 
+                    <div :class="['max-w-[85%] rounded-2xl p-5 shadow-sm', 
                                  msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white border border-gray-100 rounded-bl-none']">
                         
                         <!-- Thinking Process (Only shown for AI when thinking) -->
-                        <div v-if="msg.isThinking" class="mb-4 bg-amber-50 border-l-4 border-amber-400 p-3 rounded text-sm text-amber-800">
-                            <div class="flex items-center font-bold mb-1">
+                        <div v-if="msg.isThinking" class="mb-4 bg-amber-50 border-l-4 border-amber-400 p-4 rounded text-sm text-amber-800">
+                            <div class="flex items-center font-bold mb-2">
                                 <i class="fa-solid fa-brain mr-2 pulse-animation"></i> 
                                 DeepSeek Thinking...
                             </div>
-                            <div class="space-y-1 opacity-80 text-xs">
-                                <div v-for="step in thinkingSteps" :key="step" class="flex items-center">
-                                    <i class="fa-solid fa-check text-amber-600 mr-2"></i> {{ step }}
+                            <div class="space-y-2 opacity-90 text-sm">
+                                <div v-for="step in thinkingSteps" :key="step" class="flex items-start">
+                                    <i class="fa-solid fa-check text-amber-600 mr-2 mt-0.5 flex-shrink-0"></i> 
+                                    <span class="break-words">{{ step }}</span>
                                 </div>
                             </div>
                         </div>
