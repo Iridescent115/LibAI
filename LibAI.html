@@ -10,6 +10,8 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <!-- Import FontAwesome Icon Library -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Import Marked.js for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     
     <style>
         /* Custom scrollbar style to make it look more like a native App */
@@ -38,6 +40,120 @@
 
         body {
             font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+
+        /* Markdown content styles */
+        .markdown-content {
+            line-height: 1.7;
+        }
+        .markdown-content h1 {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+            color: #1e293b;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.3em;
+        }
+        .markdown-content h2 {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+            color: #334155;
+        }
+        .markdown-content h3 {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-top: 0.8em;
+            margin-bottom: 0.4em;
+            color: #475569;
+        }
+        .markdown-content h4 {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-top: 0.6em;
+            margin-bottom: 0.3em;
+            color: #64748b;
+        }
+        .markdown-content p {
+            margin-bottom: 0.8em;
+        }
+        .markdown-content ul, .markdown-content ol {
+            margin-left: 1.5em;
+            margin-bottom: 0.8em;
+        }
+        .markdown-content li {
+            margin-bottom: 0.3em;
+        }
+        .markdown-content ul li {
+            list-style-type: disc;
+        }
+        .markdown-content ol li {
+            list-style-type: decimal;
+        }
+        .markdown-content strong {
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .markdown-content em {
+            font-style: italic;
+        }
+        .markdown-content code {
+            background-color: #f1f5f9;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+            color: #e11d48;
+        }
+        .markdown-content pre {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            padding: 1em;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin-bottom: 1em;
+        }
+        .markdown-content pre code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+        }
+        .markdown-content blockquote {
+            border-left: 4px solid #3b82f6;
+            padding-left: 1em;
+            margin-left: 0;
+            margin-bottom: 1em;
+            color: #64748b;
+            font-style: italic;
+        }
+        .markdown-content hr {
+            border: none;
+            border-top: 1px solid #e2e8f0;
+            margin: 1.5em 0;
+        }
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 1em;
+        }
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #e2e8f0;
+            padding: 0.5em;
+            text-align: left;
+        }
+        .markdown-content table th {
+            background-color: #f8fafc;
+            font-weight: 600;
+        }
+        .markdown-content a {
+            color: #3b82f6;
+            text-decoration: underline;
+        }
+        .markdown-content a:hover {
+            color: #2563eb;
         }
     </style>
 </head>
@@ -150,7 +266,12 @@
                         </div>
 
                         <!-- Main Content -->
-                        <div class="text-sm leading-relaxed" :class="msg.role === 'user' ? 'text-white' : 'text-slate-700'" v-html="msg.content"></div>
+                        <div class="text-sm leading-relaxed" 
+                             :class="[
+                                 msg.role === 'user' ? 'text-white' : 'text-slate-700',
+                                 msg.role === 'assistant' ? 'markdown-content' : ''
+                             ]" 
+                             v-html="msg.content"></div>
 
                         <!-- References (Only shown for AI) -->
                         <div v-if="msg.sources && msg.sources.length > 0" class="mt-4 pt-4 border-t border-gray-100">
@@ -251,6 +372,30 @@
                 const API_ENDPOINT = window.location.hostname === 'localhost' 
                     ? 'http://localhost:3000/api/chat'  // 本地开发
                     : 'https://libai-worker.lhb1158169148.workers.dev/api/chat'; // 生产环境 - 部署后替换为实际的 Worker URL
+
+                // Configure marked.js options for better rendering
+                if (typeof marked !== 'undefined') {
+                    marked.setOptions({
+                        breaks: true,        // Convert \n to <br>
+                        gfm: true,          // GitHub Flavored Markdown
+                        headerIds: false,   // Don't add IDs to headers
+                        mangle: false       // Don't escape autolinked email addresses
+                    });
+                }
+
+                // Markdown rendering helper
+                const renderMarkdown = (text) => {
+                    if (typeof marked === 'undefined') {
+                        // Fallback if marked.js is not loaded
+                        return text.replace(/\n/g, '<br>');
+                    }
+                    try {
+                        return marked.parse(text);
+                    } catch (e) {
+                        console.error('Markdown parsing error:', e);
+                        return text.replace(/\n/g, '<br>');
+                    }
+                };
 
                 const translations = {
                     en: {
@@ -408,10 +553,16 @@
 
                     const userMessage = inputMessage.value.trim();
                     
-                    // 1. Add User Message
+                    // 1. Add User Message (escape HTML to prevent XSS)
+                    const escapeHtml = (text) => {
+                        const div = document.createElement('div');
+                        div.textContent = text;
+                        return div.innerHTML.replace(/\n/g, '<br>');
+                    };
+                    
                     messages.value.push({
                         role: 'user',
-                        content: userMessage
+                        content: escapeHtml(userMessage)
                     });
                     
                     // Update conversation title if this is the first user message
@@ -547,7 +698,8 @@ Your role is to provide scholarly, well-referenced assistance that reflects prof
                             console.warn('Warning: No references section found in AI response');
                         }
                         
-                        messages.value[aiMsgIndex].content = mainContent.replace(/\n/g, '<br>');
+                        // Render main content as Markdown for AI responses
+                        messages.value[aiMsgIndex].content = renderMarkdown(mainContent);
                         messages.value[aiMsgIndex].sources = extractedSources.length > 0 ? extractedSources : [];
                         
                         // Update conversation in storage
