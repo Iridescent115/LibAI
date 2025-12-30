@@ -1,0 +1,12 @@
+{
+  "name": "library-ai-assistant",
+  "version": "1.0.0",
+  "description": "Library AI Assistant with DeepSeek Integration - Cloudflare Deployment",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}

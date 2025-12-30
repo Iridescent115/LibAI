@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>University Library Intelligent Service Framework - Prototype Demo</title>
+    <!-- Import Tailwind CSS (for rapid styling) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Import Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Import FontAwesome Icon Library -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Custom scrollbar style to make it look more like a native App */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        
+        /* Breathing animation for thinking state */
+        .pulse-animation {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen overflow-hidden">
+
+    <div id="app" class="flex h-full">
+        
+        <!-- 1. Sidebar -->
+        <div class="w-64 bg-slate-900 text-slate-300 flex flex-col shadow-xl hidden md:flex">
+            <!-- Logo Area -->
+            <div class="h-16 flex items-center px-6 bg-slate-800 border-b border-slate-700">
+                <i class="fa-solid fa-graduation-cap text-blue-400 text-xl mr-3"></i>
+                <span class="font-bold text-white text-lg tracking-wide">{{ uiText.appTitle }}</span>
+            </div>
+
+            <!-- History -->
+            <div class="flex-1 overflow-y-auto py-4">
+                <div class="px-4 text-xs font-semibold text-slate-500 uppercase mb-2">{{ uiText.history }}</div>
+                
+                <div v-for="item in conversationHistory" :key="item.id" 
+                     @click="loadConversation(item.id)"
+                     :class="['mx-2 p-3 rounded cursor-pointer transition-colors flex items-center mb-1', 
+                              currentConversationId === item.id ? 'bg-slate-800 border-l-4 border-blue-500 text-white' : 'hover:bg-slate-800 text-slate-300']">
+                    <i class="fa-regular fa-comment-dots mr-3 text-sm"></i>
+                    <span class="text-sm truncate">{{ item.title }}</span>
+                </div>
+                
+                <!-- New Conversation Button -->
+                <button @click="createNewConversation" class="mx-2 mt-2 p-3 rounded bg-blue-600 hover:bg-blue-700 text-white transition-colors flex items-center justify-center">
+                    <i class="fa-solid fa-plus mr-2 text-sm"></i>
+                    <span class="text-sm font-semibold">New Conversation</span>
+                </button>
+            </div>
+
+            <!-- User Info -->
+            <div class="p-4 border-t border-slate-700 flex items-center">
+                <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs">
+                    ST
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-white">{{ uiText.studentUser }}</p>
+                    <p class="text-xs text-slate-500">{{ uiText.dept }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Main Chat Area -->
+        <div class="flex-1 flex flex-col bg-white">
+            
+            <!-- Top Navigation Bar -->
+            <div class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shadow-sm z-10">
+                <div class="flex items-center">
+                    <span class="text-lg font-bold text-slate-800">{{ uiText.mainTitle }}</span>
+                    <span class="ml-3 px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                        {{ uiText.ragMode }}
+                    </span>
+                </div>
+                <div class="relative">
+                    <button @click="clearCurrentContext" class="text-slate-500 hover:text-slate-700 mr-4">
+                        <i class="fa-solid fa-eraser"></i> {{ uiText.clearContext }}
+                    </button>
+                    <button @click="showSettings = !showSettings" class="text-slate-500 hover:text-slate-700">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
+                    
+                    <!-- Settings Dropdown -->
+                    <div v-if="showSettings" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 border border-gray-200">
+                        <div class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">{{ uiText.settingsTitle }}</div>
+                        <a href="#" @click.prevent="changeLanguage('en')" :class="['block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100', currentLang === 'en' ? 'bg-gray-50 font-bold' : '']">English</a>
+                        <a href="#" @click.prevent="changeLanguage('zh')" :class="['block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100', currentLang === 'zh' ? 'bg-gray-50 font-bold' : '']">中文 (Chinese)</a>
+                        <a href="#" @click.prevent="changeLanguage('ms')" :class="['block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100', currentLang === 'ms' ? 'bg-gray-50 font-bold' : '']">Bahasa Melayu</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Content Scroll Area -->
+            <div id="chat-container" class="flex-1 overflow-y-auto p-6 bg-gray-50 space-y-6">
+                
+                <!-- Welcome Message -->
+                <div class="flex justify-center my-4">
+                    <span class="text-xs text-gray-400 bg-gray-200 px-3 py-1 rounded-full">
+                        {{ uiText.today }} 10:42 PM
+                    </span>
+                </div>
+
+                <!-- Message Loop Rendering -->
+                <div v-for="(msg, index) in messages" :key="index" 
+                     :class="['flex w-full', msg.role === 'user' ? 'justify-end' : 'justify-start']">
+                    
+                    <!-- AI Avatar -->
+                    <div v-if="msg.role === 'assistant'" class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white shrink-0 mr-4 shadow-md">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+
+                    <!-- Message Bubble -->
+                    <div :class="['max-w-[80%] rounded-2xl p-5 shadow-sm', 
+                                 msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white border border-gray-100 rounded-bl-none']">
+                        
+                        <!-- Thinking Process (Only shown for AI when thinking) -->
+                        <div v-if="msg.isThinking" class="mb-4 bg-amber-50 border-l-4 border-amber-400 p-3 rounded text-sm text-amber-800">
+                            <div class="flex items-center font-bold mb-1">
+                                <i class="fa-solid fa-brain mr-2 pulse-animation"></i> 
+                                DeepSeek Thinking...
+                            </div>
+                            <div class="space-y-1 opacity-80 text-xs">
+                                <div v-for="step in thinkingSteps" :key="step" class="flex items-center">
+                                    <i class="fa-solid fa-check text-amber-600 mr-2"></i> {{ step }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Main Content -->
+                        <div class="text-sm leading-relaxed" :class="msg.role === 'user' ? 'text-white' : 'text-slate-700'" v-html="msg.content"></div>
+
+                        <!-- References (Only shown for AI) -->
+                        <div v-if="msg.sources && msg.sources.length > 0" class="mt-4 pt-4 border-t border-gray-100">
+                            <p class="text-xs font-bold text-gray-500 mb-2">References (Sources):</p>
+                            <ul class="text-xs text-gray-500 space-y-1">
+                                <li v-for="(source, idx) in msg.sources" :key="idx" class="hover:text-blue-600 cursor-pointer transition">
+                                    [{{ idx + 1 }}] {{ source }}
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Library Collection Recommendations (Only shown for AI) -->
+                        <div v-if="msg.books && msg.books.length > 0" class="mt-4">
+                            <p class="text-xs font-bold text-gray-500 mb-2">Recommended Library Resources:</p>
+                            <div class="flex flex-wrap gap-3">
+                                <div v-for="book in msg.books" :key="book.id" class="flex bg-slate-50 border border-slate-200 rounded-lg p-2 w-64 hover:shadow-md transition">
+                                    <div class="w-12 h-16 bg-slate-300 rounded flex items-center justify-center text-slate-500 shrink-0">
+                                        <i class="fa-solid fa-book"></i>
+                                    </div>
+                                    <div class="ml-3 flex-1 min-w-0">
+                                        <h4 class="text-sm font-bold text-slate-800 truncate">{{ book.title }}</h4>
+                                        <p class="text-xs text-slate-500 truncate">{{ book.author }}</p>
+                                        <div class="flex justify-between items-center mt-2">
+                                            <span class="text-xs font-mono bg-gray-200 px-1 rounded">{{ book.callNumber }}</span>
+                                            <span :class="['text-[10px] px-1.5 py-0.5 rounded-full font-bold', 
+                                                book.status === 'Available' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700']">
+                                                {{ book.status === 'Available' ? '🟢 Available' : '🔴 Borrowed' }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- User Avatar -->
+                    <div v-if="msg.role === 'user'" class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white shrink-0 ml-4 shadow-md">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                </div>
+
+                <!-- Bottom Spacer -->
+                <div class="h-4"></div>
+            </div>
+
+            <!-- Bottom Input Area -->
+            <div class="bg-white p-4 border-t border-gray-200">
+                <div class="max-w-4xl mx-auto relative">
+                    <div class="absolute -top-10 left-0 flex gap-2">
+                        <span class="bg-white border border-gray-200 text-gray-600 px-3 py-1 rounded-full text-xs shadow-sm cursor-pointer hover:bg-gray-50">
+                            {{ uiText.quickAction1 }}
+                        </span>
+                        <span class="bg-white border border-gray-200 text-gray-600 px-3 py-1 rounded-full text-xs shadow-sm cursor-pointer hover:bg-gray-50">
+                            {{ uiText.quickAction2 }}
+                        </span>
+                    </div>
+                    <div class="flex items-end border border-gray-300 rounded-xl bg-white shadow-sm focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all overflow-hidden">
+                        <textarea 
+                            v-model="inputMessage"
+                            @keydown.enter.prevent="sendMessage"
+                            :placeholder="uiText.placeholder" 
+                            class="w-full p-4 max-h-32 focus:outline-none resize-none bg-transparent text-sm"
+                            rows="1"
+                        ></textarea>
+                        <button 
+                            @click="sendMessage"
+                            :disabled="isProcessing"
+                            class="m-2 p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                        >
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="text-center mt-2">
+                        <p class="text-xs text-gray-400">{{ uiText.footer }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, reactive, computed, nextTick } = Vue;
+
+        createApp({
+            setup() {
+                const inputMessage = ref('');
+                const isProcessing = ref(false);
+                const thinkingSteps = ref([]);
+                const currentConversationId = ref(null);
+                const showSettings = ref(false);
+                const currentLang = ref('en');
+                const conversationHistory = ref([]);
+                const conversations = reactive({});
+                let nextConversationId = 1;
+                
+                // API 端点配置 - 自动检测环境
+                const API_ENDPOINT = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:3000/api/chat'  // 本地开发
+                    : 'https://your-worker-name.your-subdomain.workers.dev/api/chat'; // 生产环境 - 需要替换
+
+                const translations = {
+                    en: {
+                        appTitle: 'LibAI Assistant',
+                        history: 'HISTORY',
+                        studentUser: 'Student User',
+                        dept: 'Computer Science Dept.',
+                        mainTitle: 'Intelligent Consultation (DeepSeek R1 Core)',
+                        ragMode: 'RAG Enhanced Mode',
+                        clearContext: 'Clear Context',
+                        today: 'Today',
+                        placeholder: 'Enter your question here...',
+                        quickAction1: '✨ Generate Paper Outline',
+                        quickAction2: '🔍 Find Recent Core Journals',
+                        footer: 'DeepSeek R1 Model + Library Knowledge Base',
+                        settingsTitle: 'Language',
+                        historyItems: {
+                            1: 'Opening Hours Inquiry',
+                            2: 'Digital Humanities Scenarios',
+                            3: 'Metaverse Library Service Model'
+                        }
+                    },
+                    zh: {
+                        appTitle: 'LibAI 助手',
+                        history: '历史记录',
+                        studentUser: '学生用户',
+                        dept: '计算机学院',
+                        mainTitle: '智能咨询 (DeepSeek R1内核)',
+                        ragMode: 'RAG 增强模式',
+                        clearContext: '清除上下文',
+                        today: '今天',
+                        placeholder: '请输入您的问题...',
+                        quickAction1: '✨ 生成论文大纲',
+                        quickAction2: '🔍 查找近期核心期刊',
+                        footer: 'DeepSeek R1 模型 + 图书馆知识库',
+                        settingsTitle: '语言设置',
+                        historyItems: {
+                            1: '开馆时间查询',
+                            2: '数字人文应用场景',
+                            3: '元宇宙图书馆服务模式'
+                        }
+                    },
+                    ms: {
+                        appTitle: 'Pembantu LibAI',
+                        history: 'SEJARAH',
+                        studentUser: 'Pengguna Pelajar',
+                        dept: 'Fakulti Sains Komputer',
+                        mainTitle: 'Perundingan Pintar (Teras DeepSeek R1)',
+                        ragMode: 'Mod Dipertingkat RAG',
+                        clearContext: 'Kosongkan Konteks',
+                        today: 'Hari Ini',
+                        placeholder: 'Masukkan soalan anda di sini...',
+                        quickAction1: '✨ Hasilkan Rangka Kertas Kerja',
+                        quickAction2: '🔍 Cari Jurnal Teras Terkini',
+                        footer: 'Model DeepSeek R1 + Pangkalan Pengetahuan Perpustakaan',
+                        settingsTitle: 'Bahasa',
+                        historyItems: {
+                            1: 'Pertanyaan Waktu Operasi',
+                            2: 'Senario Kemanusiaan Digital',
+                            3: 'Model Perkhidmatan Perpustakaan Metaverse'
+                        }
+                    }
+                };
+
+                const uiText = computed(() => translations[currentLang.value]);
+
+                const historyList = computed(() => [
+                    { id: 1, title: uiText.value.historyItems[1], icon: 'fa-regular fa-comment-dots' },
+                    { id: 2, title: uiText.value.historyItems[2], icon: 'fa-regular fa-comment-dots' },
+                    { id: 3, title: uiText.value.historyItems[3], icon: 'fa-regular fa-pen-to-square' }
+                ]);
+
+                const changeLanguage = (lang) => {
+                    currentLang.value = lang;
+                    showSettings.value = false;
+                    
+                    // Update UI text based on language
+                    if (lang === 'zh') {
+                        document.title = '高校图书馆智能服务框架 - 原型演示';
+                    } else if (lang === 'ms') {
+                        document.title = 'Rangka Kerja Perkhidmatan Pintar Perpustakaan Universiti - Demo Prototaip';
+                    } else {
+                        document.title = 'University Library Intelligent Service Framework - Prototype Demo';
+                    }
+                };
+
+                // Generate conversation title from first user message
+                const generateTitle = (firstMessage) => {
+                    if (!firstMessage) return 'New Conversation';
+                    const words = firstMessage.split(' ').slice(0, 6).join(' ');
+                    return words.length < firstMessage.length ? words + '...' : words;
+                };
+
+                // Create new conversation
+                const createNewConversation = () => {
+                    const newId = nextConversationId++;
+                    conversations[newId] = [];
+                    conversationHistory.value.push({
+                        id: newId,
+                        title: 'New Conversation'
+                    });
+                    loadConversation(newId);
+                };
+
+                // Clear current conversation context
+                const clearCurrentContext = () => {
+                    if (currentConversationId.value && conversations[currentConversationId.value]) {
+                        conversations[currentConversationId.value] = [];
+                        messages.value = [];
+                    }
+                };
+
+                const messages = ref([]);
+
+                const loadConversation = (id) => {
+                    currentConversationId.value = id;
+                    messages.value = conversations[id] || [];
+                    nextTick(() => {
+                        const chatContainer = document.getElementById('chat-container');
+                        if(chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
+                    });
+                };
+
+                // Initialize with first conversation
+                createNewConversation();
+
+                // Call DeepSeek API
+                const callDeepSeekAPI = async (conversationMessages) => {
+                    try {
+                        const response = await fetch(API_ENDPOINT, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                messages: conversationMessages
+                            })
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('API request failed');
+                        }
+
+                        const data = await response.json();
+                        return data;
+                    } catch (error) {
+                        console.error('Error calling API:', error);
+                        throw error;
+                    }
+                };
+
+                // Send message to DeepSeek AI
+                const sendMessage = async () => {
+                    if (!inputMessage.value.trim() || isProcessing.value) return;
+
+                    const userMessage = inputMessage.value.trim();
+                    
+                    // 1. Add User Message
+                    messages.value.push({
+                        role: 'user',
+                        content: userMessage
+                    });
+                    
+                    // Update conversation title if this is the first user message
+                    const conversationIndex = conversationHistory.value.findIndex(
+                        conv => conv.id === currentConversationId.value
+                    );
+                    if (conversationIndex !== -1 && conversationHistory.value[conversationIndex].title === 'New Conversation') {
+                        conversationHistory.value[conversationIndex].title = generateTitle(userMessage);
+                    }
+                    
+                    inputMessage.value = '';
+                    isProcessing.value = true;
+                    
+                    // Scroll to bottom
+                    await nextTick();
+                    const chatContainer = document.getElementById('chat-container');
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                    // 2. Add AI Placeholder Message (Thinking State)
+                    const aiMsgIndex = messages.value.length;
+                    messages.value.push({
+                        role: 'assistant',
+                        content: '', 
+                        isThinking: true,
+                        sources: [],
+                        books: []
+                    });
+
+                    // Prepare messages for API (convert display format to API format)
+                    const apiMessages = [
+                        {
+                            role: 'system',
+                            content: 'You are a helpful library intelligent assistant. You can help users find resources, answer academic questions, and assist with paper writing. Provide structured, informative responses.'
+                        },
+                        ...messages.value
+                            .filter(msg => msg.role === 'user' || msg.role === 'assistant')
+                            .filter(msg => msg.content) // Filter out empty messages
+                            .map(msg => ({
+                                role: msg.role,
+                                content: typeof msg.content === 'string' ? msg.content.replace(/<[^>]*>/g, '') : msg.content
+                            }))
+                    ];
+
+                    try {
+                        // 3. Call DeepSeek API
+                        thinkingSteps.value = ['Connecting to DeepSeek AI...'];
+                        
+                        const response = await callDeepSeekAPI(apiMessages);
+                        
+                        // 4. Process response
+                        messages.value[aiMsgIndex].isThinking = false;
+                        thinkingSteps.value = [];
+                        
+                        const aiResponse = response.choices[0].message.content;
+                        messages.value[aiMsgIndex].content = aiResponse.replace(/\n/g, '<br>');
+                        
+                        // Update conversation in storage
+                        conversations[currentConversationId.value] = [...messages.value];
+                        
+                    } catch (error) {
+                        messages.value[aiMsgIndex].isThinking = false;
+                        thinkingSteps.value = [];
+                        messages.value[aiMsgIndex].content = `<strong>Error:</strong> Failed to get response from AI. Please make sure the server is running.<br><br>Error: ${error.message}`;
+                    }
+                    
+                    isProcessing.value = false;
+                    await nextTick();
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                };
+
+                return {
+                    inputMessage,
+                    messages,
+                    sendMessage,
+                    isProcessing,
+                    thinkingSteps,
+                    conversationHistory,
+                    currentConversationId,
+                    loadConversation,
+                    createNewConversation,
+                    clearCurrentContext,
+                    showSettings,
+                    currentLang,
+                    changeLanguage,
+                    uiText
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
