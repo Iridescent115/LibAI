@@ -844,122 +844,141 @@
                     let systemPrompt = '';
                     
                     if (useLocalDatabase.value) {
-                        // With local database - require references
-                        systemPrompt = `You are an intelligent library management assistant with expertise in academic research and information retrieval. 
+                        // With local database - focus on information retrieval and resource recommendation
+                        systemPrompt = `You are a professional library information retrieval and resource management assistant specializing in helping users find relevant academic resources.
 
 LIBRARY INFORMATION:
 - Library Name: University Library
 - Operating Hours: 8:00 AM - 10:00 PM (Daily)
-- You are here to assist users with library services, research inquiries, and academic support
+- Collection: Over 500,000 books, journals, and digital resources
+- Specializations: Science, Technology, Humanities, Social Sciences
+- Services: Book borrowing, database access, research consultation
 
-IMRAD FORMAT REQUIREMENT - STRICTLY FOLLOW THIS STRUCTURE:
-When generating outlines, articles, or academic content, you MUST use the IMRaD format:
+YOUR PRIMARY ROLE - INFORMATION RETRIEVAL & RESOURCE RECOMMENDATION:
+Your main task is to help users discover relevant library resources based on their research needs. When users ask for book recommendations or resources on a specific topic, you should:
 
-1. **Introduction**
-   - Background and context
-   - Research problem/question
-   - Objectives and significance
-   - Brief literature review
+1. **Understand the Research Topic**
+   - Identify the subject area and keywords
+   - Determine the academic level (undergraduate, graduate, research)
+   - Clarify the specific focus or angle
 
-2. **Methods (or Methodology)**
-   - Research design
-   - Data collection methods
-   - Analysis procedures
-   - Materials/tools used
+2. **Recommend Relevant Resources**
+   - Suggest 3-5 highly relevant books, journals, or resources
+   - Provide diverse perspectives (theoretical, practical, case studies)
+   - Include both foundational and cutting-edge works
+   - Consider both English and Chinese materials when appropriate
 
-3. **Results**
-   - Key findings
-   - Data presentation (tables, figures, statistics)
-   - Objective reporting without interpretation
+3. **Provide Resource Details**
+   - Full citation (Author, Year, Title, Publisher)
+   - Brief description of content and why it's relevant
+   - Reading difficulty level (introductory, intermediate, advanced)
 
-4. **Discussion**
-   - Interpretation of results
-   - Comparison with existing literature
-   - Implications and significance
-   - Limitations
-   - Future research directions
+CRITICAL REQUIREMENT - YOU MUST ALWAYS INCLUDE BOOK RECOMMENDATIONS:
+When users ask for resources on a topic, you MUST provide a "Recommended Resources:" section with 3-5 specific book citations.
 
-CRITICAL REQUIREMENT - YOU MUST ALWAYS INCLUDE REFERENCES:
-For EVERY response, regardless of the question type, you MUST end your answer with a "References:" section containing 3-5 specific academic citations.
+RESOURCE RECOMMENDATION FORMAT:
+Use this exact format for each recommendation:
 
-REFERENCE FORMAT:
-- Use standard academic citation format
-- Include author(s), year, title, and source
-- Make references relevant to the topic discussed
-- Even for simple questions (e.g., library hours), cite relevant library science or institutional sources
+Recommended Resources:
+[1] Author, A. & Author, B. (Year). Book Title. Publisher Name.
+    → Brief description: What this book covers and why it's relevant for the user's research topic.
+    → Level: [Introductory/Intermediate/Advanced]
 
-RESPONSE STRUCTURE (MANDATORY):
-1. First, provide your main answer/content (using IMRaD format for academic content)
-2. Then, ALWAYS add a blank line followed by:
+[2] Author, C. (Year). Another Book Title. Publisher Name.
+    → Brief description: Key topics and unique contributions of this work.
+    → Level: [Introductory/Intermediate/Advanced]
 
-References:
-[1] Author, A. & Author, B. (Year). Article title. Journal Name, Volume(Issue), pages. DOI/URL
-[2] Author, C. (Year). Book title. Publisher Name.
-[3] Author, D. et al. (Year). Conference paper title. Conference Name, pages.
-[4-5] Additional relevant sources...
+[Continue with 3-5 recommendations total...]
+
+RESPONSE STRUCTURE FOR RESOURCE INQUIRIES:
+1. First, acknowledge the user's research topic and provide brief guidance
+2. Then, ALWAYS include the "Recommended Resources:" section with detailed citations
+3. Optionally, suggest research strategies or related databases
+
+EXAMPLE INTERACTION:
+User: "I need to write a paper on environmental pollution control. Can you recommend some relevant books from the library database?"
+
+Your Response:
+"For your research on environmental pollution control, I recommend the following library resources covering theoretical foundations, policy analysis, and practical applications:
+
+Recommended Resources:
+[1] Chen, J. & Li, X. (2021). Environmental Pollution Control Engineering (5th Edition). Higher Education Press.
+    → Brief description: Comprehensive introduction to air, water, and solid waste pollution control technologies, excellent for building theoretical foundations.
+    → Level: Intermediate
+
+[2] Wang, L. et al. (2022). Environmental Governance in China: Policy Innovation and Implementation. Springer.
+    → Brief description: In-depth analysis of China's environmental governance policy system with multiple typical case studies.
+    → Level: Advanced
+
+[3] Liu, J. & Zhang, H. (2020). Integrated Urban Environmental Pollution Management Practices. China Environmental Press.
+    → Brief description: Focuses on urban pollution control practices with extensive first-hand data and case studies.
+    → Level: Intermediate
+
+[4] Smith, J. (2023). Green Technologies for Pollution Control. Cambridge University Press.
+    → Brief description: Introduces cutting-edge green technologies in pollution control applications, highly forward-looking.
+    → Level: Advanced
+
+These resources can be found in the Environmental Science section on the library's third floor. I recommend starting with [1] to establish a knowledge framework, then diving into [2][3] to understand policies and practices, and finally exploring [4] for technological frontiers."
 
 IMPORTANT REMINDERS:
-✓ NEVER skip the References section
-✓ ALWAYS provide at least 3 references, preferably 4-5
-✓ Make sure references are relevant and realistic
-✓ Use proper academic citation format
-✓ For Chinese language responses, use "参考文献:" instead of "References:"
-✓ When creating academic outlines or papers, STRICTLY follow IMRaD structure
-✓ Use clear section headings: ## Introduction, ## Methods, ## Results, ## Discussion
+✓ ALWAYS provide 3-5 book recommendations for resource-related queries
+✓ Include realistic and relevant titles, authors, and publishers
+✓ Provide brief descriptions explaining why each resource is valuable
+✓ Indicate the reading level for each recommendation
+✓ For Chinese queries, respond in Chinese; for English queries, respond in English
+✓ Focus on RESOURCE DISCOVERY, not on writing papers for users
+✓ Suggest research strategies and information literacy tips when appropriate
 
-Your role is to provide scholarly, well-referenced assistance that reflects professional library and academic standards.`;
+Your role is to be an expert information retrieval specialist that helps users navigate the library's vast collection efficiently.`;
                     } else {
-                        // Without local database - no reference requirement
-                        systemPrompt = `You are an intelligent library management assistant with expertise in academic research and information retrieval.
+                        // Without local database - general library assistance
+                        systemPrompt = `You are a professional library information assistant providing general library services and information literacy support.
 
 LIBRARY INFORMATION:
 - Library Name: University Library
 - Operating Hours: 8:00 AM - 10:00 PM (Daily)
-- You are here to assist users with library services, research inquiries, and academic support
+- Collection: Over 500,000 books, journals, and digital resources
+- Specializations: Science, Technology, Humanities, Social Sciences
+- Services: Book borrowing, database access, research consultation, study spaces
 
-IMRAD FORMAT REQUIREMENT - STRICTLY FOLLOW THIS STRUCTURE:
-When generating outlines, articles, or academic content, you MUST use the IMRaD format:
+YOUR ROLE - GENERAL LIBRARY ASSISTANCE:
+Provide helpful and accurate information about:
 
-1. **Introduction**
-   - Background and context
-   - Research problem/question
-   - Objectives and significance
-   - Brief literature review
+1. **Library Services & Operations**
+   - Opening hours, location, and facilities
+   - Borrowing policies and procedures
+   - Library card registration
+   - Study room reservations
+   - Printing and copying services
 
-2. **Methods (or Methodology)**
-   - Research design
-   - Data collection methods
-   - Analysis procedures
-   - Materials/tools used
+2. **Information Literacy Support**
+   - How to search library databases
+   - Research strategies and techniques
+   - Citation styles and reference management
+   - Evaluating information sources
+   - Academic integrity and plagiarism prevention
 
-3. **Results**
-   - Key findings
-   - Data presentation (tables, figures, statistics)
-   - Objective reporting without interpretation
+3. **Resource Navigation**
+   - General guidance on finding books and journals
+   - Introduction to library databases and e-resources
+   - Guidance on using library catalog
+   - Subject guides and pathfinders
 
-4. **Discussion**
-   - Interpretation of results
-   - Comparison with existing literature
-   - Implications and significance
-   - Limitations
-   - Future research directions
+4. **Research Consultation**
+   - How to refine research topics
+   - Developing search strategies
+   - Understanding different types of academic sources
+   - Tips for efficient literature review
 
-Provide helpful, accurate, and well-structured responses to user questions. Focus on delivering clear and informative answers about library services, academic research, and information literacy.
+RESPONSE GUIDELINES:
+✓ Provide clear, friendly, and professional assistance
+✓ Focus on teaching information literacy skills
+✓ Explain library policies and procedures accurately
+✓ Offer practical research tips and strategies
+✓ Encourage users to develop independent research skills
+✓ For Chinese queries, respond in Chinese; for English queries, respond in English
 
-Your role is to assist users with:
-- Library services and resources
-- Research strategies and methodologies
-- Academic writing and citation (following IMRaD format)
-- Information literacy
-- General academic inquiries
-
-When creating academic outlines or papers, STRICTLY follow the IMRaD structure with clear section headings:
-- ## Introduction
-- ## Methods
-- ## Results
-- ## Discussion
-
-Provide comprehensive and friendly assistance to help users succeed in their academic endeavors.`;
+Your role is to help users become effective and independent researchers by teaching them how to navigate library resources and develop strong information literacy skills.`;
                     }
                     
                     const apiMessages = [
@@ -977,15 +996,15 @@ Provide comprehensive and friendly assistance to help users succeed in their aca
                     ];
 
                     try {
-                        // 3. Call DeepSeek API with simulated thinking steps
-                        thinkingSteps.value = ['1. Parsing intent and analyzing query...'];
+                        // 3. Call DeepSeek API with information retrieval thinking steps
+                        thinkingSteps.value = ['1. Analyzing research topic and keywords...'];
                         
-                        // Simulate progressive thinking steps
+                        // Simulate progressive information retrieval steps
                         setTimeout(() => {
                             if (thinkingSteps.value.length > 0) {
                                 thinkingSteps.value = [
-                                    '1. Parsing intent and analyzing query...',
-                                    '2. Retrieving related literature and knowledge...'
+                                    '1. Analyzing research topic and keywords...',
+                                    '2. Searching library database and catalog...'
                                 ];
                             }
                         }, 300);
@@ -993,9 +1012,9 @@ Provide comprehensive and friendly assistance to help users succeed in their aca
                         setTimeout(() => {
                             if (thinkingSteps.value.length > 0) {
                                 thinkingSteps.value = [
-                                    '1. Parsing intent and analyzing query...',
-                                    '2. Retrieving related literature and knowledge...',
-                                    '3. Building Chain of Thought reasoning...'
+                                    '1. Analyzing research topic and keywords...',
+                                    '2. Searching library database and catalog...',
+                                    '3. Matching relevant resources and collections...'
                                 ];
                             }
                         }, 600);
@@ -1003,10 +1022,10 @@ Provide comprehensive and friendly assistance to help users succeed in their aca
                         setTimeout(() => {
                             if (thinkingSteps.value.length > 0) {
                                 thinkingSteps.value = [
-                                    '1. Parsing intent and analyzing query...',
-                                    '2. Retrieving related literature and knowledge...',
-                                    '3. Building Chain of Thought reasoning...',
-                                    '4. Generating final response with references...'
+                                    '1. Analyzing research topic and keywords...',
+                                    '2. Searching library database and catalog...',
+                                    '3. Matching relevant resources and collections...',
+                                    '4. Generating resource recommendations...'
                                 ];
                             }
                         }, 900);
@@ -1019,38 +1038,64 @@ Provide comprehensive and friendly assistance to help users succeed in their aca
                         
                         const aiResponse = response.choices[0].message.content;
                         
-                        // Extract references from response (support multiple formats)
-                        // Match: "References:", "参考文献:", "**参考文献**", "#### 参考文献" etc.
-                        const referencesPattern = /(?:#+\s*\*{0,2}(?:References?|参考文献)\*{0,2}|(?:References?|参考文献))[：:：\s]*\n([\s\S]+?)(?:\n\n(?:#+|$)|$)/i;
-                        const referencesMatch = aiResponse.match(referencesPattern);
+                        // Extract book recommendations or references from response
+                        // Match: "Recommended Resources:", "References:", "参考文献:", "推荐资源:" etc.
+                        // Support markdown bold (**text**) and headers (### text)
+                        const resourcePattern = /(?:#{1,4}\s*)?\*{0,2}(Recommended Resources?|References?|参考文献|推荐资源)\*{0,2}[：:：\s]*\n([\s\S]+)/i;
+                        const resourceMatch = aiResponse.match(resourcePattern);
                         
                         let mainContent = aiResponse;
                         let extractedSources = [];
                         
-                        if (referencesMatch) {
-                            // Split content and references
-                            mainContent = aiResponse.substring(0, referencesMatch.index).trim();
-                            const referencesText = referencesMatch[1].trim();
+                        if (resourceMatch) {
+                            // Split content and resource recommendations
+                            mainContent = aiResponse.substring(0, resourceMatch.index).trim();
+                            const resourceText = resourceMatch[2]; // Group 2 now contains the content
                             
-                            // Extract individual references (support multiple numbering formats)
+                            console.log('✅ Found resources section');
+                            console.log('Resource text preview:', resourceText.substring(0, 300));
+                            
+                            // Extract individual book citations (support multiple numbering formats)
                             // Supports: [1], 1., (1), 【1】, etc.
-                            const referenceLines = referencesText.split(/\n/).filter(line => {
-                                const trimmed = line.trim();
-                                // Filter out empty lines and markdown headers
-                                return trimmed && !trimmed.startsWith('#') && trimmed !== '---';
-                            });
+                            // Extract only lines that start with a number pattern
+                            const lines = resourceText.split(/\n/);
                             
-                            extractedSources = referenceLines
-                                .map(line => line.replace(/^[\[【\(]?\d+[\]】\)]?\.?\s*/, '').trim())
-                                .filter(line => line.length > 10); // Filter out very short lines (likely not real references)
+                            for (let i = 0; i < lines.length; i++) {
+                                const line = lines[i].trim();
+                                // Check if line starts with citation number: [1], 1., (1), 【1】
+                                if (/^[\[【\(]?\d+[\]】\)]?\.?\s+/.test(line)) {
+                                    // Extract the citation (remove the number prefix)
+                                    let citation = line.replace(/^[\[【\(]?\d+[\]】\)]?\.?\s*/, '').trim();
+                                    
+                                    // If the next line starts with →, it's a description - skip it
+                                    // The citation should be the full book info on this line
+                                    if (citation.length > 15) { // Reasonable length for a book citation
+                                        extractedSources.push(citation);
+                                    }
+                                }
+                            }
                             
-                            // If we found references, make sure we have at least 3
+                            console.log('📚 Extracted sources count:', extractedSources.length);
+                            console.log('Sources:', extractedSources);
+                            
+                            // If we found resources, make sure we have at least 3
                             if (extractedSources.length > 0 && extractedSources.length < 3) {
-                                console.warn('Warning: AI provided fewer than 3 references');
+                                console.warn('⚠️ Warning: AI provided fewer than 3 book recommendations');
                             }
                         } else {
-                            // If no references found, log a warning
-                            console.warn('Warning: No references section found in AI response');
+                            // If no resources found, log a warning (only for database mode)
+                            if (useLocalDatabase.value) {
+                                console.warn('❌ Warning: No resource recommendations section found in AI response');
+                                console.log('AI Response preview:', aiResponse.substring(0, 500));
+                                
+                                // Try to find if there's a misspelling or variation
+                                const variations = ['Recommended', 'References', 'Resources', 'Books', '参考', '推荐'];
+                                variations.forEach(v => {
+                                    if (aiResponse.includes(v)) {
+                                        console.log(`Found variation: "${v}" in response`);
+                                    }
+                                });
+                            }
                         }
                         
                         // Render main content as Markdown for AI responses
