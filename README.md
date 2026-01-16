@@ -1,45 +1,99 @@
-# LibAI - 图书馆智能助手
+# LibAI - 图书馆智能信息检索系统
 
-基于 DeepSeek API 的智能图书馆助手，提供学术咨询、文献推荐和 AI 对话服务。
+基于 DeepSeek API 的智能图书馆信息检索与资源推荐系统，集成真实 MySQL 数据库，提供专业的学术资源检索服务。
 
-部署在 **Cloudflare Pages + Workers** 上，实现全球化无服务器性能。
+部署在 **Cloudflare Pages + Workers** 上，结合本地数据库实现全栈信息检索解决方案。
 
-## 🌟 功能特性
+## 🌟 核心功能
 
-- 🤖 **DeepSeek AI 驱动** - 使用 DeepSeek R1 模型，提供专业的学术咨询
-- 📚 **自动参考文献** - 每次回答自动生成 3-5 个学术参考文献
-- 📝 **Markdown 渲染** - 优雅的格式化显示，支持标题、列表、代码等
-- 💬 **多对话管理** - 支持多个独立对话，自动保存历史
-- ⏰ **智能时间戳** - 动态显示对话创建时间（今天/昨天/日期）
+- 🤖 **AI 智能检索** - 使用 DeepSeek R1 模型，理解用户查询意图并推荐相关书籍
+- 📚 **真实数据库集成** - 连接 MySQL 数据库，查询真实馆藏信息
+- � **元数据标准化** - 严格遵循图书馆元数据标准（12个字段）
+- � **智能推荐引擎** - AI 分析用户需求，从数据库中匹配最相关的书籍
+- 📝 **可视化结果** - 以表格形式展示书籍详细信息（书名、作者、位置等）
+- 💬 **对话式交互** - 自然语言查询，支持多轮对话和上下文理解
 - 🌐 **多语言支持** - 支持中文、英文、马来文三种语言
-- 🧠 **思考过程可视化** - 实时显示 AI 推理过程
-- ☁️ **无服务器架构** - 基于 Cloudflare 全球 CDN，快速稳定
+- 🧠 **思考过程可视化** - 实时显示 AI 检索推理过程
+- ☁️ **混合架构** - 云端前端 + 本地数据库，兼顾性能和数据安全
 
-## 📦 技术栈
+## 📦 系统架构
 
 ```
-架构：
-用户浏览器 → Cloudflare Pages (前端) → Cloudflare Workers (API) → DeepSeek API
+┌─────────────────┐
+│   用户浏览器    │
+└────────┬────────┘
+         │
+         ↓
+┌─────────────────────────────────┐
+│   Cloudflare Pages (前端)       │
+│   - LibAI.html                  │
+│   - Vue 3 + Tailwind CSS        │
+└────────┬───────────────┬────────┘
+         │               │
+         ↓               ↓
+┌────────────────┐  ┌──────────────────┐
+│ Cloudflare     │  │  本地数据库 API   │
+│ Workers        │  │  (db-server.js)  │
+│                │  │                  │
+│ DeepSeek API   │  │  MySQL 数据库    │
+│ (AI 推理)      │  │  (书籍元数据)    │
+└────────────────┘  └──────────────────┘
 ```
 
-| 层级 | 技术 |
-|-------|-----------|
-| 前端 | Vue 3 + Tailwind CSS + Marked.js |
-| 后端 | Cloudflare Workers |
-| 托管 | Cloudflare Pages |
-| AI 引擎 | DeepSeek R1 |
-| 部署 | Wrangler CLI |
+### 架构说明
 
-## 🚀 快速部署指南
+| 组件 | 技术栈 | 部署位置 | 功能 |
+|------|--------|----------|------|
+| 前端界面 | Vue 3 + Tailwind CSS + Marked.js | Cloudflare Pages | 用户交互、结果展示 |
+| AI 服务 | Cloudflare Workers | Cloudflare 边缘网络 | API 代理、AI 推理 |
+| 数据库 API | Node.js + Express + MySQL2 | 本地服务器 | 数据查询接口 |
+| 数据存储 | MySQL 8.0 | 本地服务器 | 书籍元数据存储 |
 
-### 前置要求
+## 🗄️ 数据库元数据标准
 
-- ✅ DeepSeek API 密钥 ([获取地址](https://api-docs.deepseek.com/))
-- ✅ Cloudflare 账户（[免费注册](https://dash.cloudflare.com/sign-up)）
-- ✅ GitHub 账户
-- ✅ Node.js 环境
+系统严格遵循图书馆元数据标准，包含以下12个字段:
 
-### 步骤 1: 克隆或准备项目
+| 字段 | 说明 | 示例 |
+|------|------|------|
+| ID | 书籍唯一标识 | 1 |
+| Title | 书名 | Introduction to Algorithms |
+| Author | 作者 | Thomas H. Cormen, et al. |
+| Language | 语言 | English |
+| Publisher | 出版社 | MIT Press |
+| Subjects | 主题分类 | Computer Science; Algorithms |
+| Document type | 文献类型 | Book |
+| Physical description | 物理描述 | 1312 pages; 24 cm |
+| Classification | 分类号 | TP312.1 |
+| Status | 状态 | Available / Checked Out |
+| Location | 馆藏位置 | 3rd Floor, Zone A, Shelf 15 |
+| Call number | 索书号 | TP312.1/C82 |
+
+## 🚀 完整部署指南
+
+### 部署方案说明
+
+LibAI 采用混合部署架构:
+- ✅ **前端 + AI**: 部署在 Cloudflare (全球可访问)
+- ✅ **数据库**: 部署在本地服务器 (需要网络访问权限)
+
+**重要提示**: 
+- 如果您想在多台电脑上使用数据库功能,需要在每台电脑上部署数据库
+- 或者将数据库部署在一台服务器上,其他电脑通过网络访问
+
+---
+
+## 📍 部署步骤
+
+### 阶段一: Cloudflare 部署 (前端 + AI)
+
+#### 前置要求
+
+- ✅ DeepSeek API 密钥 ([获取地址](https://platform.deepseek.com/))
+- ✅ Cloudflare 账户 ([免费注册](https://dash.cloudflare.com/sign-up))
+- ✅ Node.js 环境 (v16+)
+- ✅ Git
+
+#### 步骤 1: 准备项目
 
 ```powershell
 # 克隆项目（如果从 GitHub）
@@ -144,80 +198,560 @@ https://libai.pages.dev/LibAI.html
 
 ### 特色功能
 
-- **自动参考文献**: 每次回答后自动在底部显示 3-5 个学术参考文献
-- **Markdown 格式**: 支持标题、列表、代码块等丰富格式
-- **思考过程**: 查看 AI 的推理步骤（DeepSeek R1 特性）
-- **时间戳**: 智能显示对话创建时间（今天/昨天/具体日期）
+### 步骤 5: 部署前端到 Cloudflare Pages
+
+1. 访问 [Cloudflare Dashboard](https://dash.cloudflare.com/)
+2. 点击 **Workers & Pages** → **Create application** → **Pages** → **Connect to Git**
+3. 授权 GitHub 仓库
+4. 选择 `libai` 仓库
+5. 配置构建设置:
+   - **Build command**: (留空)
+   - **Build output directory**: `/`
+6. 点击 **Save and Deploy**
+
+部署成功后,记录 Pages URL:
+```
+https://libai.pages.dev
+```
+
+---
+
+### 阶段二: 本地数据库部署
+
+#### 前置要求
+
+- ✅ MySQL 8.0+ 或 MariaDB 10.5+
+- ✅ Node.js 环境 (v16+)
+- ✅ 数据库管理工具 (推荐 Navicat Premium)
+
+#### 步骤 1: 安装 MySQL 数据库
+
+**Windows 系统:**
+
+1. 下载 [MySQL Installer](https://dev.mysql.com/downloads/installer/)
+2. 运行安装程序,选择 **"Full"** 安装类型
+3. 配置设置:
+   - **Port**: 3306 (默认)
+   - **Authentication**: Use Strong Password Encryption
+   - **Root Password**: 设置一个强密码 (记住这个密码!)
+4. 完成安装
+
+**macOS 系统:**
+
+```bash
+# 使用 Homebrew 安装
+brew install mysql
+
+# 启动 MySQL 服务
+brew services start mysql
+
+# 安全配置
+mysql_secure_installation
+```
+
+**Linux 系统 (Ubuntu/Debian):**
+
+```bash
+# 安装 MySQL
+sudo apt update
+sudo apt install mysql-server
+
+# 启动服务
+sudo systemctl start mysql
+sudo systemctl enable mysql
+
+# 安全配置
+sudo mysql_secure_installation
+```
+
+#### 步骤 2: 创建数据库
+
+**使用 Navicat (推荐):**
+
+1. 打开 Navicat Premium
+2. 点击 **连接** → **MySQL**
+3. 配置连接:
+   - **连接名**: LibAI
+   - **主机**: localhost
+   - **端口**: 3306
+   - **用户名**: root
+   - **密码**: (您设置的密码)
+4. 点击 **测试连接** → **确定**
+5. 右键连接名 → **新建数据库**
+   - **数据库名**: libai_db
+   - **字符集**: utf8mb4
+   - **排序规则**: utf8mb4_general_ci
+
+**使用命令行:**
+
+```bash
+# 登录 MySQL
+mysql -u root -p
+
+# 创建数据库
+CREATE DATABASE libai_db CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+# 退出
+exit;
+```
+
+#### 步骤 3: 创建表结构
+
+1. 打开 Navicat,连接到 `libai_db` 数据库
+2. 点击 **查询** → **新建查询**
+3. 复制 `library-metadata-format.sql` 文件内容
+4. 粘贴到查询窗口
+5. 点击 **运行** (或按 Ctrl+R)
+6. 看到 "Books table created successfully" 表示成功
+
+#### 步骤 4: 导入数据
+
+**导入示例数据 (测试用):**
+
+1. 在 Navicat 中新建查询
+2. 复制 `sample-data.sql` 文件内容
+3. 运行查询
+4. 成功后会显示插入了 25 本书
+
+**导入真实数据 (生产环境):**
+
+可以使用以下方式:
+- CSV 导入: Navicat → **导入向导**
+- Excel 导入: 整理数据后使用 Navicat 导入
+- SQL 脚本: 批量 INSERT 语句
+
+#### 步骤 5: 配置数据库 API 服务器
+
+1. 编辑 `db-server.js`,修改数据库连接信息:
+
+```javascript
+const dbConfig = {
+  host: 'localhost',
+  port: 3306,
+  user: 'root',
+  password: '您的数据库密码',  // ⚠️ 修改这里
+  database: 'libai_db',
+  charset: 'utf8mb4'
+};
+```
+
+2. 安装依赖:
+
+```powershell
+npm install
+```
+
+3. 启动数据库 API 服务器:
+
+```powershell
+npm run db-server
+```
+
+看到以下信息表示成功:
+```
+🚀 数据库 API 服务器运行在 http://localhost:3001
+📊 数据库: libai_db@localhost:3306
+✅ 数据库连接成功!
+```
+
+#### 步骤 6: 测试连接
+
+打开浏览器访问:
+```
+http://localhost:3001/api/health
+```
+
+应该看到:
+```json
+{
+  "success": true,
+  "message": "数据库服务正常",
+  "timestamp": "2026-01-16T..."
+}
+```
+
+---
+
+### 阶段三: 在其他电脑上部署数据库
+
+如果您想在多台电脑上使用 LibAI 的数据库功能,有两种方案:
+
+#### 方案 A: 每台电脑独立部署数据库
+
+在每台电脑上重复 **阶段二** 的所有步骤。
+
+**优点:**
+- ✅ 各自独立,不受网络影响
+- ✅ 数据可以不同
+
+**缺点:**
+- ❌ 需要多次配置
+- ❌ 数据不同步
+
+#### 方案 B: 中心化数据库服务器 (推荐)
+
+将数据库部署在一台中心服务器上,其他电脑通过网络访问。
+
+**步骤 1: 在服务器上部署**
+
+1. 在一台电脑(服务器)上完成 **阶段二** 的部署
+2. 记录服务器的 IP 地址 (例如: `192.168.1.100`)
+
+**步骤 2: 配置 MySQL 远程访问**
+
+在服务器上执行:
+
+```sql
+-- 创建远程访问用户
+CREATE USER 'libai_user'@'%' IDENTIFIED BY 'your_password';
+
+-- 授予权限
+GRANT ALL PRIVILEGES ON libai_db.* TO 'libai_user'@'%';
+
+-- 刷新权限
+FLUSH PRIVILEGES;
+```
+
+编辑 MySQL 配置文件:
+
+**Windows**: `C:\ProgramData\MySQL\MySQL Server 8.0\my.ini`
+**Linux/Mac**: `/etc/mysql/mysql.conf.d/mysqld.cnf`
+
+找到并修改:
+```ini
+bind-address = 0.0.0.0  # 允许所有IP访问
+```
+
+重启 MySQL 服务:
+
+**Windows**:
+```powershell
+Restart-Service MySQL80
+```
+
+**Linux/Mac**:
+```bash
+sudo systemctl restart mysql
+```
+
+**步骤 3: 配置防火墙**
+
+**Windows 防火墙:**
+
+```powershell
+# 允许 3306 端口
+New-NetFirewallRule -DisplayName "MySQL" -Direction Inbound -Protocol TCP -LocalPort 3306 -Action Allow
+
+# 允许 3001 端口 (API 服务器)
+New-NetFirewallRule -DisplayName "LibAI API" -Direction Inbound -Protocol TCP -LocalPort 3001 -Action Allow
+```
+
+**Linux 防火墙 (UFW):**
+
+```bash
+sudo ufw allow 3306/tcp
+sudo ufw allow 3001/tcp
+sudo ufw reload
+```
+
+**步骤 4: 在客户端电脑配置**
+
+1. 在客户端电脑上安装 Node.js
+2. 复制 `db-server.js` 和 `package.json` 到客户端
+3. 修改 `db-server.js` 中的数据库配置:
+
+```javascript
+const dbConfig = {
+  host: '192.168.1.100',  // ⚠️ 服务器IP地址
+  port: 3306,
+  user: 'libai_user',     // ⚠️ 远程用户
+  password: 'your_password',
+  database: 'libai_db',
+  charset: 'utf8mb4'
+};
+```
+
+4. 启动 API 服务器:
+
+```powershell
+npm install
+npm run db-server
+```
+
+**步骤 5: 测试连接**
+
+在客户端浏览器访问:
+```
+http://localhost:3001/api/books/titles
+```
+
+应该能看到服务器数据库中的书籍列表。
+
+---
+
+## 🎯 使用说明
+
+### 1. 访问系统
+
+## 🎯 使用说明
+
+### 1. 访问系统
+
+打开浏览器访问您的 Cloudflare Pages 地址:
+```
+https://libai.pages.dev
+```
+
+### 2. 启用数据库模式
+
+在界面右上角,打开 **"Local Database"** 开关。
+
+### 3. 查询书籍
+
+输入自然语言查询,例如:
+- "I need books on environmental pollution control"
+- "推荐一些关于人工智能的书籍"
+- "Can you recommend books about biology?"
+
+### 4. 查看结果
+
+AI 会分析您的需求并返回:
+- 📝 简短的推荐说明
+- 📊 书籍详情表格 (包含12个元数据字段)
+
+### 示例查询与结果
+
+**查询**: "I need books on environmental pollution control"
+
+**AI 响应**:
+> Based on your research interest in environmental pollution control, I've identified several relevant books from our library collection that cover theoretical frameworks, technological solutions, policy analysis, and case studies.
+
+**书籍表格**:
+
+| ID | Title | Author | Language | Publisher | Subjects | ... |
+|----|-------|--------|----------|-----------|----------|-----|
+| 7 | Environmental Pollution Control Engineering | C.S. Rao | English | New Age International | Environmental Engineering; Pollution Control | ... |
+| 8 | Green Technologies for Pollution Control | Jonathan Smith | English | Cambridge University Press | Green Technology; Environmental Protection | ... |
 
 ## 🔄 更新与维护
 
-### 更新前端
+### 更新前端代码
 
 ```powershell
-# 修改 LibAI.html 后
+# 修改 LibAI.html 后提交
 git add LibAI.html
-git commit -m "Update frontend features"
+git commit -m "Update frontend"
 git push
 ```
-Cloudflare Pages 会自动重新部署（约 1-2 分钟）。
 
-### 更新后端
+Cloudflare Pages 会自动重新部署 (约 1-2 分钟)。
+
+### 更新 Worker 代码
 
 ```powershell
-# 修改 worker.js 后
+# 修改 worker.js 后重新部署
 wrangler deploy
+```
+
+### 更新数据库
+
+**添加新书籍:**
+
+使用 Navicat 或 SQL:
+
+```sql
+INSERT INTO books (title, author, language, publisher, subjects, document_type, physical_description, classification, status, location, call_number)
+VALUES 
+('Book Title', 'Author Name', 'English', 'Publisher', 'Subject1; Subject2', 'Book', '500 pages; 24 cm', 'TP123', 'Available', '3rd Floor, Zone A', 'TP123/A12');
+```
+
+**修改书籍状态:**
+
+```sql
+UPDATE books SET status = 'Checked Out' WHERE id = 3;
 ```
 
 ### 本地测试
 
 ```powershell
-# 测试 Worker
-wrangler dev
+# 测试数据库 API
+npm run db-server
 
-# 本地开启 HTTP 服务器测试前端
-npx http-server -p 3000
+# 在浏览器中打开 LibAI.html
+# 然后测试查询功能
 ```
 
 ## 💰 成本估算
 
-| 服务 | 免费额度 | 说明 |
+| 服务 | 免费额度 | 成本 |
 |------|---------|------|
-| **Cloudflare Pages** | 500 次构建/月 | 足够个人使用 |
-| **Cloudflare Workers** | 100,000 请求/天 | 非常慷慨 |
-| **DeepSeek API** | 按使用量计费 | 价格低廉 |
+| **Cloudflare Pages** | 500 次构建/月 | 免费 |
+| **Cloudflare Workers** | 100,000 请求/天 | 免费 |
+| **DeepSeek API** | 按使用量计费 | ~¥0.001/次查询 |
+| **MySQL 数据库** | 本地部署 | 免费 |
 
-💡 **个人项目完全免费！**
+💡 **个人/学校项目完全免费或成本极低!**
 
-## 🐛 常见问题
+## 🐛 常见问题与解决
 
-### Q1: CORS 错误
-- ✅ 检查 `worker.js` 中的 CORS 头配置
-- ✅ 确认 `API_ENDPOINT` 地址正确
+### Q1: 数据库连接失败
 
-### Q2: API Key 无效 (401/403)
-- ✅ 在 Cloudflare Dashboard 检查环境变量
-- ✅ 确保变量名是 `DEEPSEEK_API_KEY`
-- ✅ 重新部署 Worker
+**问题**: `❌ 数据库连接失败: ECONNREFUSED`
 
-### Q3: 没有参考文献显示
-- ✅ 检查浏览器控制台（F12）是否有警告
-- ✅ AI 回答中应包含 "References:" 或 "参考文献:" 部分
+**解决**:
+1. 检查 MySQL 服务是否运行
+   ```powershell
+   # Windows
+   Get-Service MySQL80
+   
+   # Linux
+   sudo systemctl status mysql
+   ```
+2. 检查端口 3306 是否被占用
+3. 验证 `db-server.js` 中的密码是否正确
 
-### Q4: Markdown 格式不显示
-- ✅ 确认 `marked.js` CDN 已加载
-- ✅ 检查浏览器控制台是否有错误
+### Q2: 表格不显示
 
-### Q5: 页面 404
-- ✅ 确保 URL 包含 `LibAI.html`
-- ✅ 或将文件重命名为 `index.html`
+**问题**: AI 返回了推荐,但看不到表格
+
+**解决**:
+1. 按 F12 打开浏览器控制台
+2. 查看是否有错误:
+   - `Failed to fetch` - 数据库 API 服务器未运行
+   - `CORS error` - 端口配置问题
+3. 确认数据库 API 服务器正在运行:
+   ```
+   npm run db-server
+   ```
+
+### Q3: AI 没有返回书籍 ID
+
+**问题**: AI 只返回文字,没有 "Recommended Book IDs:"
+
+**解决**:
+1. 检查数据库中是否有数据:
+   ```sql
+   SELECT COUNT(*) FROM books;
+   ```
+2. 重新启动数据库 API 服务器
+3. 清除浏览器缓存并刷新页面
+
+### Q4: 远程访问数据库失败
+
+**问题**: 客户端无法连接到服务器数据库
+
+**解决**:
+1. 检查网络连通性:
+   ```powershell
+   ping 192.168.1.100
+   ```
+2. 测试端口是否开放:
+   ```powershell
+   Test-NetConnection -ComputerName 192.168.1.100 -Port 3306
+   ```
+3. 检查防火墙规则
+4. 验证 MySQL 远程用户权限:
+   ```sql
+   SELECT user, host FROM mysql.user WHERE user='libai_user';
+   ```
+
+### Q5: CORS 错误
+
+**问题**: 浏览器提示跨域错误
+
+**解决**:
+1. 检查 `worker.js` 中的 CORS 配置
+2. 确保数据库 API 在 `db-server.js` 中启用了 CORS:
+   ```javascript
+   app.use(cors());
+   ```
 
 ### Q6: Worker 部署失败
-- ✅ 运行 `wrangler whoami` 检查登录状态
-- ✅ 检查 `wrangler.toml` 配置
 
-## 📚 高级配置
+**问题**: `wrangler deploy` 失败
 
-### 自定义域名
+**解决**:
+```powershell
+# 检查登录状态
+wrangler whoami
+
+# 重新登录
+wrangler logout
+wrangler login
+
+# 重新部署
+wrangler deploy
+```
+
+## 📚 项目文件说明
+
+### 核心文件
+
+| 文件 | 说明 | 用途 |
+|------|------|------|
+| `LibAI.html` | 前端页面 | 用户界面,部署到 Cloudflare Pages |
+| `worker.js` | Cloudflare Worker | AI API 代理 |
+| `db-server.js` | 数据库 API 服务器 | 本地运行,提供书籍查询接口 |
+| `package.json` | 项目配置 | 依赖管理 |
+| `wrangler.toml` | Worker 配置 | Cloudflare 部署配置 |
+
+### SQL 文件
+
+| 文件 | 说明 |
+|------|------|
+| `library-metadata-format.sql` | 表结构 (空白) |
+| `sample-data.sql` | 示例数据 (25本书) |
+
+### 文档文件
+
+| 文件 | 说明 |
+|------|------|
+| `README.md` | 项目文档 (本文件) |
+| `LIBRARY_METADATA_STANDARD.md` | 元数据标准说明 |
+| `DEPLOYMENT.md` | 部署详细指南 |
+
+## � 安全建议
+
+### 生产环境部署
+
+1. **数据库密码**:
+   - 使用强密码 (至少12位,包含大小写字母、数字、特殊字符)
+   - 不要在代码中硬编码,使用环境变量
+
+2. **API 密钥**:
+   - DeepSeek API 密钥必须加密存储在 Cloudflare Workers
+   - 定期轮换密钥
+
+3. **网络安全**:
+   - 如果部署在公网,使用 VPN 或 IP 白名单
+   - 配置 SSL/TLS 证书
+   - 启用 MySQL 的 SSL 连接
+
+4. **备份**:
+   - 定期备份数据库:
+     ```bash
+     mysqldump -u root -p libai_db > backup.sql
+     ```
+   - 自动备份脚本 (建议每天备份)
+
+## 📈 性能优化
+
+### 数据库优化
+
+```sql
+-- 添加索引以提高查询速度
+CREATE INDEX idx_subjects ON books(subjects);
+CREATE INDEX idx_title ON books(title);
+CREATE INDEX idx_classification ON books(classification);
+```
+
+### 缓存策略
+
+考虑添加 Redis 缓存层以减少数据库查询:
+```javascript
+// 缓存书籍列表 (5分钟)
+// 缓存查询结果 (1分钟)
+```
 
 在 Cloudflare Pages 设置中可以绑定自己的域名：
 ```
@@ -254,6 +788,24 @@ vars = { ENVIRONMENT = "development" }
 
 ### 贡献指南
 
+### 缓存策略
+
+考虑添加 Redis 缓存层以减少数据库查询:
+```javascript
+// 缓存书籍列表 (5分钟)
+// 缓存查询结果 (1分钟)
+```
+
+## 🤝 贡献指南
+
+欢迎贡献!如果您发现问题或有改进建议:
+
+1. Fork 本项目
+2. 创建您的功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交您的更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启一个 Pull Request
+
 欢迎提交 Issue 和 Pull Request！
 
 ## 📄 许可证
@@ -262,12 +814,27 @@ MIT License
 
 ## 🔗 相关链接
 
-- [DeepSeek API 文档](https://api-docs.deepseek.com/)
+- [DeepSeek API 文档](https://platform.deepseek.com/)
 - [Cloudflare Workers 文档](https://developers.cloudflare.com/workers/)
 - [Cloudflare Pages 文档](https://developers.cloudflare.com/pages/)
 - [Vue 3 文档](https://vuejs.org/)
 - [Marked.js 文档](https://marked.js.org/)
+- [MySQL 文档](https://dev.mysql.com/doc/)
+- [Navicat Premium](https://www.navicat.com/)
+
+## 🙏 致谢
+
+- [DeepSeek](https://www.deepseek.com/) - 强大的 AI 推理引擎
+- [Cloudflare](https://www.cloudflare.com/) - 全球化边缘计算平台
+- [Vue.js](https://vuejs.org/) - 渐进式 JavaScript 框架
+- [Tailwind CSS](https://tailwindcss.com/) - 实用优先的 CSS 框架
+- [Marked.js](https://marked.js.org/) - 快速的 Markdown 解析器
+- [MySQL](https://www.mysql.com/) - 可靠的关系型数据库
 
 ---
 
-**Made with ❤️ for Academic Libraries**
+**⭐ 如果这个项目对您有帮助,请给个 Star!**
+
+**Made with ❤️ for Library Information Retrieval and Academic Research**
+
+**适用场景**: 高校图书馆、公共图书馆、研究机构、学术资源检索

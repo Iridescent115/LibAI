@@ -272,48 +272,56 @@
                         <!-- Main Content -->
                         <div class="text-sm leading-relaxed text-slate-700 markdown-content" v-html="msg.content"></div>
 
-                        <!-- References (Only shown for AI) -->
-                        <div v-if="msg.sources && msg.sources.length > 0" class="mt-4 pt-4 border-t border-gray-200">
-                            <div class="flex items-center justify-between mb-2">
-                                <p class="text-xs font-bold text-gray-500">
-                                    {{ currentLang === 'zh' ? '参考文献' : (currentLang === 'ms' ? 'Rujukan' : 'References') }}:
-                                </p>
-                                <!-- Always show button when there are references -->
-                                <button 
-                                    @click="searchLibraryDatabase(msg.sources)"
-                                    class="px-3 py-1 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700 transition-colors flex items-center space-x-1 shadow-sm"
-                                >
-                                    <i class="fa-solid fa-magnifying-glass"></i>
-                                    <span>{{ uiText.searchLibrary }}</span>
-                                </button>
-                            </div>
-                            <ul class="text-xs text-gray-500 space-y-1">
-                                <li v-for="(source, idx) in msg.sources" :key="idx" class="hover:text-blue-600 cursor-pointer transition">
-                                    [{{ idx + 1 }}] {{ source }}
-                                </li>
-                            </ul>
-                        </div>
-
-                        <!-- Library Collection Recommendations (Only shown for AI) -->
-                        <div v-if="msg.books && msg.books.length > 0" class="mt-4">
-                            <p class="text-xs font-bold text-gray-500 mb-2">Recommended Library Resources:</p>
-                            <div class="flex flex-wrap gap-3">
-                                <div v-for="book in msg.books" :key="book.id" class="flex bg-slate-50 border border-slate-200 rounded-lg p-2 w-64 hover:shadow-md transition">
-                                    <div class="w-12 h-16 bg-slate-300 rounded flex items-center justify-center text-slate-500 shrink-0">
-                                        <i class="fa-solid fa-book"></i>
-                                    </div>
-                                    <div class="ml-3 flex-1 min-w-0">
-                                        <h4 class="text-sm font-bold text-slate-800 truncate">{{ book.title }}</h4>
-                                        <p class="text-xs text-slate-500 truncate">{{ book.author }}</p>
-                                        <div class="flex justify-between items-center mt-2">
-                                            <span class="text-xs font-mono bg-gray-200 px-1 rounded">{{ book.callNumber }}</span>
-                                            <span :class="['text-[10px] px-1.5 py-0.5 rounded-full font-bold', 
-                                                book.status === 'Available' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700']">
-                                                {{ book.status === 'Available' ? '🟢 Available' : '🔴 Borrowed' }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
+                        <!-- Book Details Table (displayed directly below AI response) -->
+                        <div v-if="msg.bookDetails && msg.bookDetails.length > 0" class="mt-6 border-t border-gray-200 pt-4">
+                            <h3 class="text-sm font-bold text-gray-700 mb-3 flex items-center">
+                                <i class="fa-solid fa-book mr-2 text-blue-600"></i>
+                                {{ currentLang === 'zh' ? '推荐书籍详情' : (currentLang === 'ms' ? 'Butiran Buku Cadangan' : 'Recommended Book Details') }}
+                            </h3>
+                            <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+                                <table class="min-w-full bg-white text-xs">
+                                    <thead class="bg-gradient-to-r from-blue-50 to-indigo-50">
+                                        <tr>
+                                            <th class="px-3 py-3 text-left font-semibold text-gray-700 border-b">ID</th>
+                                            <th class="px-3 py-3 text-left font-semibold text-gray-700 border-b">Title</th>
+                                            <th class="px-3 py-3 text-left font-semibold text-gray-700 border-b">Author</th>
+                                            <th class="px-3 py-3 text-left font-semibold text-gray-700 border-b">Language</th>
+                                            <th class="px-3 py-3 text-left font-semibold text-gray-700 border-b">Publisher</th>
+                                            <th class="px-3 py-3 text-left font-semibold text-gray-700 border-b">Subjects</th>
+                                            <th class="px-3 py-3 text-left font-semibold text-gray-700 border-b">Document type</th>
+                                            <th class="px-3 py-3 text-left font-semibold text-gray-700 border-b">Physical description</th>
+                                            <th class="px-3 py-3 text-left font-semibold text-gray-700 border-b">Classification</th>
+                                            <th class="px-3 py-3 text-left font-semibold text-gray-700 border-b">Status</th>
+                                            <th class="px-3 py-3 text-left font-semibold text-gray-700 border-b">Location</th>
+                                            <th class="px-3 py-3 text-left font-semibold text-gray-700 border-b">Call number</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="book in msg.bookDetails" :key="book.id" class="border-b border-gray-100 hover:bg-blue-50 transition">
+                                            <td class="px-3 py-3 text-gray-600">{{ book.id }}</td>
+                                            <td class="px-3 py-3 font-medium text-gray-900">{{ book.title }}</td>
+                                            <td class="px-3 py-3 text-gray-700">{{ book.author }}</td>
+                                            <td class="px-3 py-3 text-gray-600">{{ book.language || '-' }}</td>
+                                            <td class="px-3 py-3 text-gray-600">{{ book.publisher || '-' }}</td>
+                                            <td class="px-3 py-3 text-gray-600 text-xs">{{ book.subjects || '-' }}</td>
+                                            <td class="px-3 py-3 text-gray-600">{{ book.document_type || 'Book' }}</td>
+                                            <td class="px-3 py-3 text-gray-600 text-xs">{{ book.physical_description || '-' }}</td>
+                                            <td class="px-3 py-3 text-gray-600 font-mono">{{ book.classification || '-' }}</td>
+                                            <td class="px-3 py-3">
+                                                <span class="px-2 py-1 rounded text-xs font-semibold whitespace-nowrap"
+                                                    :class="{
+                                                        'bg-green-100 text-green-800': book.status === 'Available',
+                                                        'bg-orange-100 text-orange-800': book.status === 'Checked Out',
+                                                        'bg-gray-100 text-gray-800': book.status === 'Maintenance'
+                                                    }">
+                                                    {{ book.status || 'Available' }}
+                                                </span>
+                                            </td>
+                                            <td class="px-3 py-3 text-gray-600">{{ book.location || '-' }}</td>
+                                            <td class="px-3 py-3 text-gray-600 font-mono">{{ book.call_number || '-' }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
 
@@ -844,92 +852,49 @@
                     let systemPrompt = '';
                     
                     if (useLocalDatabase.value) {
+                        // Fetch book list from local database API first
+                        let booksList = [];
+                        try {
+                            const booksResponse = await fetch('http://localhost:3001/api/books/titles');
+                            const booksData = await booksResponse.json();
+                            if (booksData.success) {
+                                booksList = booksData.books;
+                            }
+                        } catch (error) {
+                            console.error('❌ Failed to fetch books list:', error);
+                        }
+                        
                         // With local database - focus on information retrieval and resource recommendation
-                        systemPrompt = `You are a professional library information retrieval and resource management assistant specializing in helping users find relevant academic resources.
+                        systemPrompt = `You are a professional library information retrieval assistant specializing in helping users find relevant academic resources.
 
-LIBRARY INFORMATION:
-- Library Name: University Library
-- Operating Hours: 8:00 AM - 10:00 PM (Daily)
-- Collection: Over 500,000 books, journals, and digital resources
-- Specializations: Science, Technology, Humanities, Social Sciences
-- Services: Book borrowing, database access, research consultation
+AVAILABLE BOOKS IN OUR LIBRARY DATABASE:
+${booksList.map(book => `ID: ${book.id} | Title: ${book.title} | Author: ${book.author} | Subjects: ${book.subjects || 'General'}`).join('\n')}
 
-YOUR PRIMARY ROLE - INFORMATION RETRIEVAL & RESOURCE RECOMMENDATION:
-Your main task is to help users discover relevant library resources based on their research needs. When users ask for book recommendations or resources on a specific topic, you should:
+YOUR PRIMARY ROLE - BOOK ID RECOMMENDATION:
+Your main task is to analyze the user's research topic and recommend relevant books from the library database by their IDs.
 
-1. **Understand the Research Topic**
-   - Identify the subject area and keywords
-   - Determine the academic level (undergraduate, graduate, research)
-   - Clarify the specific focus or angle
+RESPONSE FORMAT - YOU MUST FOLLOW THIS EXACTLY:
+1. First, provide a brief greeting and understanding of their research needs (2-3 sentences)
+2. Then, ALWAYS include a "Recommended Book IDs:" section
 
-2. **Recommend Relevant Resources**
-   - Suggest 3-5 highly relevant books, journals, or resources
-   - Provide diverse perspectives (theoretical, practical, case studies)
-   - Include both foundational and cutting-edge works
-   - Consider both English and Chinese materials when appropriate
+CRITICAL REQUIREMENT:
+When users ask for book recommendations or resources, you MUST respond with:
 
-3. **Provide Resource Details**
-   - Full citation (Author, Year, Title, Publisher)
-   - Brief description of content and why it's relevant
-   - Reading difficulty level (introductory, intermediate, advanced)
+Recommended Book IDs: [1, 5, 12]
 
-CRITICAL REQUIREMENT - YOU MUST ALWAYS INCLUDE BOOK RECOMMENDATIONS:
-When users ask for resources on a topic, you MUST provide a "Recommended Resources:" section with 3-5 specific book citations.
+- Select 3-8 book IDs that are most relevant to the user's topic
+- Choose books from different perspectives (theoretical, practical, case studies)
+- Consider the user's academic level
+- Only use IDs from the available books list above
 
-RESOURCE RECOMMENDATION FORMAT:
-Use this exact format for each recommendation:
-
-Recommended Resources:
-[1] Author, A. & Author, B. (Year). Book Title. Publisher Name.
-    → Brief description: What this book covers and why it's relevant for the user's research topic.
-    → Level: [Introductory/Intermediate/Advanced]
-
-[2] Author, C. (Year). Another Book Title. Publisher Name.
-    → Brief description: Key topics and unique contributions of this work.
-    → Level: [Introductory/Intermediate/Advanced]
-
-[Continue with 3-5 recommendations total...]
-
-RESPONSE STRUCTURE FOR RESOURCE INQUIRIES:
-1. First, acknowledge the user's research topic and provide brief guidance
-2. Then, ALWAYS include the "Recommended Resources:" section with detailed citations
-3. Optionally, suggest research strategies or related databases
-
-EXAMPLE INTERACTION:
-User: "I need to write a paper on environmental pollution control. Can you recommend some relevant books from the library database?"
-
+EXAMPLE:
+User: "I need resources on environmental pollution control"
 Your Response:
-"For your research on environmental pollution control, I recommend the following library resources covering theoretical foundations, policy analysis, and practical applications:
+"Based on your research interest in environmental pollution control, I've identified several relevant books from our library collection that cover theoretical foundations, policy analysis, and practical applications.
 
-Recommended Resources:
-[1] Chen, J. & Li, X. (2021). Environmental Pollution Control Engineering (5th Edition). Higher Education Press.
-    → Brief description: Comprehensive introduction to air, water, and solid waste pollution control technologies, excellent for building theoretical foundations.
-    → Level: Intermediate
+Recommended Book IDs: [3, 7, 15, 22]"
 
-[2] Wang, L. et al. (2022). Environmental Governance in China: Policy Innovation and Implementation. Springer.
-    → Brief description: In-depth analysis of China's environmental governance policy system with multiple typical case studies.
-    → Level: Advanced
-
-[3] Liu, J. & Zhang, H. (2020). Integrated Urban Environmental Pollution Management Practices. China Environmental Press.
-    → Brief description: Focuses on urban pollution control practices with extensive first-hand data and case studies.
-    → Level: Intermediate
-
-[4] Smith, J. (2023). Green Technologies for Pollution Control. Cambridge University Press.
-    → Brief description: Introduces cutting-edge green technologies in pollution control applications, highly forward-looking.
-    → Level: Advanced
-
-These resources can be found in the Environmental Science section on the library's third floor. I recommend starting with [1] to establish a knowledge framework, then diving into [2][3] to understand policies and practices, and finally exploring [4] for technological frontiers."
-
-IMPORTANT REMINDERS:
-✓ ALWAYS provide 3-5 book recommendations for resource-related queries
-✓ Include realistic and relevant titles, authors, and publishers
-✓ Provide brief descriptions explaining why each resource is valuable
-✓ Indicate the reading level for each recommendation
-✓ For Chinese queries, respond in Chinese; for English queries, respond in English
-✓ Focus on RESOURCE DISCOVERY, not on writing papers for users
-✓ Suggest research strategies and information literacy tips when appropriate
-
-Your role is to be an expert information retrieval specialist that helps users navigate the library's vast collection efficiently.`;
+`;
                     } else {
                         // Without local database - general library assistance
                         systemPrompt = `You are a professional library information assistant providing general library services and information literacy support.
@@ -1038,84 +1003,50 @@ Your role is to help users become effective and independent researchers by teach
                         
                         const aiResponse = response.choices[0].message.content;
                         
-                        // Extract book recommendations or references from response
-                        // Use a simple indexOf approach for more reliability
-                        
+                        // Extract book IDs and fetch details from database
+                        let bookDetails = [];
                         let mainContent = aiResponse;
-                        let extractedSources = [];
-                        let headerIndex = -1;
                         
-                        // Search for common header patterns
-                        const searchTerms = [
-                            '**Recommended Resources:**',
-                            'Recommended Resources:',
-                            '**References:**',
-                            'References:',
-                            '**参考文献：**',
-                            '**参考文献:**',
-                            '参考文献：',
-                            '参考文献:',
-                            '**推荐资源：**',
-                            '推荐资源：'
-                        ];
+                        // Search for "Recommended Book IDs:" pattern
+                        const idPattern = /Recommended Book IDs:\s*\[([0-9,\s]+)\]/i;
+                        const match = aiResponse.match(idPattern);
                         
-                        for (const term of searchTerms) {
-                            const idx = aiResponse.indexOf(term);
-                            if (idx !== -1) {
-                                headerIndex = idx + term.length;
-                                console.log('✅ Found resources section:', term);
-                                break;
-                            }
-                        }
-                        
-                        if (headerIndex > -1) {
-                            // Split content and resource recommendations
-                            mainContent = aiResponse.substring(0, headerIndex - 50).trim();
-                            const resourceText = aiResponse.substring(headerIndex);
+                        if (match && useLocalDatabase.value) {
+                            const idsString = match[1];
+                            const bookIds = idsString.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
                             
-                            console.log('Resource text preview:', resourceText.substring(0, 300));
+                            console.log('📚 Extracted Book IDs:', bookIds);
                             
-                            // Extract individual book citations
-                            const lines = resourceText.split(/\n/);
+                            // Remove the "Recommended Book IDs:" line from display content
+                            mainContent = aiResponse.replace(idPattern, '').trim();
                             
-                            for (let i = 0; i < lines.length; i++) {
-                                const line = lines[i].trim();
-                                // Check if line starts with citation number: [1], 1., (1), 【1】
-                                if (/^[\[【\(]?\d+[\]】\)]?\.?\s+/.test(line)) {
-                                    // Extract the citation (remove the number prefix)
-                                    let citation = line.replace(/^[\[【\(]?\d+[\]】\)]?\.?\s*/, '').trim();
+                            if (bookIds.length > 0) {
+                                try {
+                                    // Fetch book details from local database API
+                                    const response = await fetch('http://localhost:3001/api/books/details', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify({ ids: bookIds })
+                                    });
                                     
-                                    if (citation.length > 15) {
-                                        extractedSources.push(citation);
+                                    const data = await response.json();
+                                    
+                                    if (data.success && data.books.length > 0) {
+                                        bookDetails = data.books;
+                                        console.log('✅ Fetched book details:', bookDetails);
                                     }
+                                } catch (error) {
+                                    console.error('❌ Failed to fetch book details:', error);
                                 }
-                            }
-                            
-                            console.log('📚 Extracted sources count:', extractedSources.length);
-                            console.log('Sources:', extractedSources);
-                            
-                            if (extractedSources.length > 0 && extractedSources.length < 3) {
-                                console.warn('⚠️ Warning: AI provided fewer than 3 book recommendations');
-                            }
-                        } else {
-                            // If no resources found, log a warning (only for database mode)
-                            if (useLocalDatabase.value) {
-                                console.warn('❌ Warning: No resource recommendations section found in AI response');
-                                console.log('AI Response preview:', aiResponse.substring(0, 500));
-                                
-                                // Try to find if there's a misspelling or variation
-                                const variations = ['Recommended', 'References', 'Resources', 'Books', '参考', '推荐'];
-                                variations.forEach(v => {
-                                    if (aiResponse.includes(v)) {
-                                        console.log(`Found variation: "${v}" in response`);
-                                    }
-                                });
                             }
                         }
                         
                         // Render main content as Markdown for AI responses
                         messages.value[aiMsgIndex].content = renderMarkdown(mainContent);
-                        messages.value[aiMsgIndex].sources = extractedSources.length > 0 ? extractedSources : [];
+                        messages.value[aiMsgIndex].bookDetails = bookDetails; // Store book details instead of sources
+                        messages.value[aiMsgIndex].sources = []; // No longer need sources array
                         
                         // Update conversation in storage
                         conversations[currentConversationId.value] = [...messages.value];
