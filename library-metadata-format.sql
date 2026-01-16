@@ -13,6 +13,7 @@ CREATE TABLE books (
     author VARCHAR(255) NOT NULL COMMENT 'Author',
     language VARCHAR(50) DEFAULT 'English' COMMENT 'Language',
     publisher VARCHAR(255) COMMENT 'Publisher',
+    publication_time VARCHAR(50) COMMENT 'Publication time',
     subjects VARCHAR(255) COMMENT 'Subjects',
     document_type VARCHAR(50) DEFAULT 'Book' COMMENT 'Document type',
     physical_description VARCHAR(255) COMMENT 'Physical description',
