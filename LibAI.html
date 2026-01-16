@@ -1039,25 +1039,43 @@ Your role is to help users become effective and independent researchers by teach
                         const aiResponse = response.choices[0].message.content;
                         
                         // Extract book recommendations or references from response
-                        // Match: "Recommended Resources:", "References:", "参考文献:", "推荐资源:" etc.
-                        // Support markdown bold (**text**) and headers (### text)
-                        const resourcePattern = /(?:#{1,4}\s*)?\*{0,2}(Recommended Resources?|References?|参考文献|推荐资源)\*{0,2}[：:：\s]*\n([\s\S]+)/i;
-                        const resourceMatch = aiResponse.match(resourcePattern);
+                        // Use a simple indexOf approach for more reliability
                         
                         let mainContent = aiResponse;
                         let extractedSources = [];
+                        let headerIndex = -1;
                         
-                        if (resourceMatch) {
+                        // Search for common header patterns
+                        const searchTerms = [
+                            '**Recommended Resources:**',
+                            'Recommended Resources:',
+                            '**References:**',
+                            'References:',
+                            '**参考文献：**',
+                            '**参考文献:**',
+                            '参考文献：',
+                            '参考文献:',
+                            '**推荐资源：**',
+                            '推荐资源：'
+                        ];
+                        
+                        for (const term of searchTerms) {
+                            const idx = aiResponse.indexOf(term);
+                            if (idx !== -1) {
+                                headerIndex = idx + term.length;
+                                console.log('✅ Found resources section:', term);
+                                break;
+                            }
+                        }
+                        
+                        if (headerIndex > -1) {
                             // Split content and resource recommendations
-                            mainContent = aiResponse.substring(0, resourceMatch.index).trim();
-                            const resourceText = resourceMatch[2]; // Group 2 now contains the content
+                            mainContent = aiResponse.substring(0, headerIndex - 50).trim();
+                            const resourceText = aiResponse.substring(headerIndex);
                             
-                            console.log('✅ Found resources section');
                             console.log('Resource text preview:', resourceText.substring(0, 300));
                             
-                            // Extract individual book citations (support multiple numbering formats)
-                            // Supports: [1], 1., (1), 【1】, etc.
-                            // Extract only lines that start with a number pattern
+                            // Extract individual book citations
                             const lines = resourceText.split(/\n/);
                             
                             for (let i = 0; i < lines.length; i++) {
@@ -1067,9 +1085,7 @@ Your role is to help users become effective and independent researchers by teach
                                     // Extract the citation (remove the number prefix)
                                     let citation = line.replace(/^[\[【\(]?\d+[\]】\)]?\.?\s*/, '').trim();
                                     
-                                    // If the next line starts with →, it's a description - skip it
-                                    // The citation should be the full book info on this line
-                                    if (citation.length > 15) { // Reasonable length for a book citation
+                                    if (citation.length > 15) {
                                         extractedSources.push(citation);
                                     }
                                 }
@@ -1078,7 +1094,6 @@ Your role is to help users become effective and independent researchers by teach
                             console.log('📚 Extracted sources count:', extractedSources.length);
                             console.log('Sources:', extractedSources);
                             
-                            // If we found resources, make sure we have at least 3
                             if (extractedSources.length > 0 && extractedSources.length < 3) {
                                 console.warn('⚠️ Warning: AI provided fewer than 3 book recommendations');
                             }
